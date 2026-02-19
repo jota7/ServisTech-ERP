@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opciones de Hosting para Venezuela - Tarjeta Debito Virtual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            text-align: justify;
+            text-align-last: left;
+        }
+        
+        @page {
+            size: A4;
+            margin: 2cm 2cm 2.5cm 2cm;
+            @top-center { content: string(doctitle); font-size: 9pt; color: #666; }
+            @bottom-center { content: counter(page); font-size: 9pt; }
+        }
+        
+        @page :first { margin: 0; @top-center { content: none; } @bottom-center { content: none; } }
+        @page cover { @top-center { content: none; } @bottom-center { content: none; } }
+        @page toc { @top-center { content: none; } @bottom-center { content: none; } }
+        
+        body { string-set: doctitle ""; }
+        h1 { string-set: doctitle content(); }
+        
+        .cover {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+            page: cover;
+            page-break-after: always;
+            background: linear-gradient(135deg, #065f46 0%, #059669 50%, #10b981 100%);
+        }
+        
+        .cover-decoration::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        
+        .cover-decoration::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+        }
+        
+        .cover-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 85%;
+            z-index: 10;
+            color: white;
+        }
+        
+        .cover-title {
+            font-size: 28pt;
+            font-weight: 700;
+            margin-bottom: 0.5cm;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .cover-subtitle {
+            font-size: 16pt;
+            font-weight: 400;
+            margin-bottom: 1cm;
+            opacity: 0.9;
+        }
+        
+        .cover-meta {
+            font-size: 12pt;
+            line-height: 2;
+            opacity: 0.8;
+        }
+        
+        .cover-version {
+            position: absolute;
+            bottom: 2cm;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10pt;
+            opacity: 0.6;
+            color: white;
+        }
+        
+        .toc-page {
+            page: toc;
+            page-break-after: always;
+        }
+        
+        .toc-title {
+            font-size: 24pt;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 1cm;
+            text-align: center;
+            border-bottom: 3px solid #10b981;
+            padding-bottom: 0.5cm;
+        }
+        
+        .toc { list-style: none; padding: 0; }
+        .toc li { margin: 0.4cm 0; }
+        .toc a { color: #333; text-decoration: none; display: flex; align-items: baseline; }
+        .toc a::after { content: leader('.') target-counter(attr(href url), page); flex: 1; text-align: right; }
+        .toc-section { font-weight: 700; font-size: 12pt; color: #065f46; }
+        .toc-subsection { padding-left: 1cm; font-size: 11pt; }
+        
+        h1 {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #065f46;
+            margin: 1cm 0 0.5cm 0;
+            padding-bottom: 0.3cm;
+            border-bottom: 2px solid #10b981;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #059669;
+            margin: 0.8cm 0 0.4cm 0;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #333;
+            margin: 0.6cm 0 0.3cm 0;
+            page-break-after: avoid;
+        }
+        
+        p { margin: 0.4cm 0; }
+        
+        .info-box {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .info-box-title {
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 0.2cm;
+        }
+        
+        .warning-box {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .warning-box-title {
+            font-weight: 700;
+            color: #c2410c;
+            margin-bottom: 0.2cm;
+        }
+        
+        .success-box {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .success-box-title {
+            font-weight: 700;
+            color: #166534;
+            margin-bottom: 0.2cm;
+        }
+        
+        .recommendation-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .recommendation-title {
+            font-weight: 700;
+            color: #1d4ed8;
+            margin-bottom: 0.2cm;
+        }
+        
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 10pt;
+            background: #f3f4f6;
+            padding: 0.1cm 0.2cm;
+            border-radius: 3px;
+        }
+        
+        .code-block {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 9pt;
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 0.5cm;
+            border-radius: 5px;
+            margin: 0.5cm 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            page-break-inside: avoid;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5cm 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        thead { display: table-header-group; }
+        
+        th {
+            background: #065f46;
+            color: white;
+            padding: 0.3cm;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.3cm;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:nth-child(even) { background: #f9fafb; }
+        tr { page-break-inside: avoid; }
+        
+        .price-highlight {
+            font-weight: 700;
+            color: #059669;
+            font-size: 12pt;
+        }
+        
+        .provider-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .provider-name {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 0.3cm;
+        }
+        
+        .step {
+            display: flex;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .step-number {
+            width: 1.2cm;
+            height: 1.2cm;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12pt;
+            flex-shrink: 0;
+            margin-right: 0.4cm;
+        }
+        
+        .step-content { flex: 1; }
+        .step-title { font-weight: 700; color: #065f46; margin-bottom: 0.2cm; }
+        
+        ul, ol { margin: 0.3cm 0; padding-left: 1cm; }
+        li { margin: 0.2cm 0; }
+        
+        .checklist { list-style: none; padding-left: 0; }
+        .checklist li { padding-left: 1.2cm; position: relative; }
+        .checklist li::before { content: '[ ]'; position: absolute; left: 0; color: #10b981; font-weight: 700; }
+        
+        .page-break { page-break-before: always; }
+        
+        a { color: #059669; word-break: break-all; }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.1cm 0.3cm;
+            border-radius: 4px;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+        .badge-recommended { background: #dcfce7; color: #166534; }
+        .badge-economical { background: #dbeafe; color: #1e40af; }
+        .badge-easy { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+    <div class="cover-decoration"></div>
+    <div class="cover-content">
+        <h1 class="cover-title">Opciones de Hosting Cloud</h1>
+        <p class="cover-subtitle">Para Venezuela con Tarjeta de Debito Virtual</p>
+        <div class="cover-meta">
+            <p>Guia Completa de Proveedores que Aceptan</p>
+            <p>Zinli, Wally, PayPal y Tarjetas Virtuales</p>
+        </div>
+    </div>
+    <div class="cover-version">Version 1.0 - Febrero 2025</div>
+</div>
+
+<!-- TABLA DE CONTENIDOS -->
+<div class="toc-page">
+    <h2 class="toc-title">Tabla de Contenidos</h2>
+    <ul class="toc">
+        <li class="toc-section"><a href="#intro">1. Introduccion</a></li>
+        <li class="toc-subsection"><a href="#tarjetas">1.1 Tarjetas Virtuales Disponibles</a></li>
+        <li class="toc-subsection"><a href="#recomendacion">1.2 Mi Recomendacion Principal</a></li>
+        
+        <li class="toc-section"><a href="#opciones">2. Opciones de Proveedores</a></li>
+        <li class="toc-subsection"><a href="#digitalocean">2.1 DigitalOcean (Recomendado)</a></li>
+        <li class="toc-subsection"><a href="#vultr">2.2 Vultr</a></li>
+        <li class="toc-subsection"><a href="#hetzner">2.3 Hetzner (Mas Economico)</a></li>
+        <li class="toc-subsection"><a href="#contabo">2.4 Contabo</a></li>
+        <li class="toc-subsection"><a href="#hostinger">2.5 Hostinger</a></li>
+        <li class="toc-subsection"><a href="#linode">2.6 Linode (Akamai)</a></li>
+        
+        <li class="toc-section"><a href="#comparacion">3. Tabla Comparativa</a></li>
+        
+        <li class="toc-section"><a href="#guia-digitalocean">4. Guia Paso a Paso: DigitalOcean</a></li>
+        
+        <li class="toc-section"><a href="#alternativas">5. Alternativas de Pago</a></li>
+        
+        <li class="toc-section"><a href="#consejos">6. Consejos Finales</a></li>
+    </ul>
+</div>
+
+<!-- INTRODUCCION -->
+<h1 id="intro">1. Introduccion</h1>
+
+<p>Si estas en Venezuela y tienes una tarjeta de debito virtual, esta guia te mostrara las mejores opciones de hosting cloud para desplegar tu proyecto SERVISTECH ERP.</p>
+
+<div class="info-box">
+    <div class="info-box-title">Por que Railway no funciono?</div>
+    <p>Railway ha estado teniendo problemas con tarjetas de Venezuela, incluso las virtuales. Por eso he preparado esta lista de alternativas confiables que si aceptan tarjetas virtuales como Zinli, Wally y otras.</p>
+</div>
+
+<h2 id="tarjetas">1.1 Tarjetas Virtuales Disponibles en Venezuela</h2>
+
+<p>Estas son las tarjetas virtuales que funcionan para pagos internacionales:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Tarjeta</th>
+            <th>Tipo</th>
+            <th>Como Recargar</th>
+            <th>Notas</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Zinli</strong></td>
+            <td>Virtual y Fisica</td>
+            <td>Pago Movil, Transferencia</td>
+            <td>Muy popular, buena aceptacion</td>
+        </tr>
+        <tr>
+            <td><strong>Wally</strong></td>
+            <td>Virtual y Fisica</td>
+            <td>Banesco Panama, Tarjetas</td>
+            <td>Respaldada por Banesco</td>
+        </tr>
+        <tr>
+            <td><strong>PayPal</strong></td>
+            <td>Saldo Digital</td>
+            <td>AirTM, Remesas</td>
+            <td>No es tarjeta, pero aceptan saldo</td>
+        </tr>
+        <tr>
+            <td><strong>USDT/Crypto</strong></td>
+            <td>Criptomonedas</td>
+            <td>Binance, exchanges</td>
+            <td>Algunos proveedores la aceptan</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="recomendacion">1.2 Mi Recomendacion Principal</h2>
+
+<div class="recommendation-box">
+    <div class="recommendation-title">Opcion #1: DigitalOcean</div>
+    <p><strong>Por que:</strong> Es el mas facil de usar, tiene la mejor documentacion para principiantes, acepta tarjetas virtuales sin problemas, y tiene precios razonables.</p>
+    <p><strong>Costo:</strong> Desde $4/mes (basico) o $24/mes (recomendado para ERP)</p>
+    <p><strong>Ideal para:</strong> Principiantes que quieren algo que funcione sin complicaciones</p>
+</div>
+
+<div class="recommendation-box">
+    <div class="recommendation-title">Opcion #2: Hetzner (Si quieres ahorrar)</div>
+    <p><strong>Por que:</strong> Es el mas economico del mercado, servidores en Europa, muy estable.</p>
+    <p><strong>Costo:</strong> Desde 3.49 EUR/mes (aproximadamente $3.80 USD)</p>
+    <p><strong>Ideal para:</strong> Si quieres el mejor precio y no te importa que los servidores esten en Europa</p>
+</div>
+
+<!-- OPCIONES -->
+<h1 id="opciones" class="page-break">2. Opciones de Proveedores</h1>
+
+<h2 id="digitalocean">2.1 DigitalOcean <span class="badge badge-recommended">RECOMENDADO</span></h2>
+
+<div class="provider-card">
+    <div class="provider-name">DigitalOcean</div>
+    
+    <p><strong>Sitio web:</strong> digitalocean.com</p>
+    
+    <p><strong>Metodos de pago aceptados:</strong></p>
+    <ul>
+        <li>Tarjetas de credito (Visa, Mastercard, Amex)</li>
+        <li>Tarjetas de debito</li>
+        <li>PayPal</li>
+    </ul>
+    
+    <p><strong>Precios (Droplets - VPS):</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>SSD</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Basico</td>
+                <td>1 vCPU</td>
+                <td>512 MB</td>
+                <td>10 GB</td>
+                <td class="price-highlight">$4/mes</td>
+            </tr>
+            <tr>
+                <td>Regular</td>
+                <td>1 vCPU</td>
+                <td>1 GB</td>
+                <td>25 GB</td>
+                <td class="price-highlight">$6/mes</td>
+            </tr>
+            <tr>
+                <td><strong>Recomendado ERP</strong></td>
+                <td>2 vCPU</td>
+                <td>4 GB</td>
+                <td>80 GB</td>
+                <td class="price-highlight">$24/mes</td>
+            </tr>
+            <tr>
+                <td>Avanzado</td>
+                <td>4 vCPU</td>
+                <td>8 GB</td>
+                <td>160 GB</td>
+                <td class="price-highlight">$48/mes</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Ventajas:</strong></p>
+    <ul>
+        <li>Interfaz muy facil de usar</li>
+        <li>Mucha documentacion en espanol</li>
+        <li>Marketplace con aplicaciones pre-instaladas</li>
+        <li>Buena comunidad y tutoriales</li>
+        <li>SSD rapido</li>
+        <li>Proteccion DDoS gratuita</li>
+    </ul>
+    
+    <p><strong>Desventajas:</strong></p>
+    <ul>
+        <li>No es el mas barato del mercado</li>
+        <li>Soporte tecnico basico (pago para premium)</li>
+    </ul>
+</div>
+
+<h2 id="vultr">2.2 Vultr</h2>
+
+<div class="provider-card">
+    <div class="provider-name">Vultr</div>
+    
+    <p><strong>Sitio web:</strong> vultr.com</p>
+    
+    <p><strong>Metodos de pago aceptados:</strong></p>
+    <ul>
+        <li>Tarjetas de credito (Visa, Mastercard, Amex, Discover)</li>
+        <li>PayPal</li>
+        <li>Bitcoin (criptomonedas)</li>
+    </ul>
+    
+    <p><strong>Precios (Cloud Compute):</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>SSD</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cloud IPv6</td>
+                <td>1 vCPU</td>
+                <td>512 MB</td>
+                <td>10 GB</td>
+                <td class="price-highlight">$2.50/mes</td>
+            </tr>
+            <tr>
+                <td>Cloud</td>
+                <td>1 vCPU</td>
+                <td>1 GB</td>
+                <td>25 GB</td>
+                <td class="price-highlight">$5/mes</td>
+            </tr>
+            <tr>
+                <td><strong>Recomendado ERP</strong></td>
+                <td>2 vCPU</td>
+                <td>4 GB</td>
+                <td>80 GB</td>
+                <td class="price-highlight">$20/mes</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Ventajas:</strong></p>
+    <ul>
+        <li>Precio de entrada muy bajo ($2.50)</li>
+        <li>Acepta Bitcoin</li>
+        <li>Muchos centros de datos globales</li>
+        <li>Despliegue rapido</li>
+    </ul>
+    
+    <p><strong>Desventajas:</strong></p>
+    <ul>
+        <li>El plan mas barato solo tiene IPv6 (no IPv4)</li>
+        <li>Proteccion DDoS cuesta extra ($10/mes)</li>
+        <li>Menos documentacion que DigitalOcean</li>
+    </ul>
+</div>
+
+<h2 id="hetzner">2.3 Hetzner Cloud <span class="badge badge-economical">MAS ECONOMICO</span></h2>
+
+<div class="provider-card">
+    <div class="provider-name">Hetzner Cloud</div>
+    
+    <p><strong>Sitio web:</strong> hetzner.com/cloud</p>
+    
+    <p><strong>Metodos de pago aceptados:</strong></p>
+    <ul>
+        <li>Tarjetas de credito (Visa, Mastercard, Amex, UnionPay)</li>
+        <li>PayPal (solo pago manual)</li>
+        <li>Transferencia bancaria (SEPA)</li>
+    </ul>
+    
+    <div class="warning-box">
+        <div class="warning-box-title">Nota Importante</div>
+        <p>Hetzner es muy estricto con verificacion de identidad. Pueden pedirte:</p>
+        <ul>
+            <li>Foto de tu pasaporte o cedula</li>
+            <li>Selfie sosteniendo el documento</li>
+            <li>Comprobante de direccion</li>
+        </ul>
+        <p>Esto es normal para proveedores europeos por regulaciones GDPR.</p>
+    </div>
+    
+    <p><strong>Precios (en Euros):</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>NVMe</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CX23</td>
+                <td>2 vCPU</td>
+                <td>4 GB</td>
+                <td>40 GB</td>
+                <td class="price-highlight">3.49 EUR/mes (~$3.80)</td>
+            </tr>
+            <tr>
+                <td><strong>Recomendado ERP</strong></td>
+                <td>4 vCPU</td>
+                <td>8 GB</td>
+                <td>80 GB</td>
+                <td class="price-highlight">7.72 EUR/mes (~$8.40)</td>
+            </tr>
+            <tr>
+                <td>CPX51</td>
+                <td>8 vCPU</td>
+                <td>16 GB</td>
+                <td>240 GB</td>
+                <td class="price-highlight">22.76 EUR/mes (~$24.80)</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Ventajas:</strong></p>
+    <ul>
+        <li>El mas barato del mercado</li>
+        <li>Hardware de alta calidad (NVMe SSD)</li>
+        <li>Servidores en Alemania y Finlandia</li>
+        <li>Privacidad europea (GDPR)</li>
+        <li>Tráfico ilimitado (20 TB)</li>
+    </ul>
+    
+    <p><strong>Desventajas:</strong></p>
+    <ul>
+        <li>Verificacion de identidad estricta</li>
+        <li>Interfaz menos amigable para principiantes</li>
+        <li>Servidores solo en Europa (puede ser lento para usuarios en America)</li>
+        <li>Soporte en ingles/aleman principalmente</li>
+    </ul>
+</div>
+
+<h2 id="contabo">2.4 Contabo</h2>
+
+<div class="provider-card">
+    <div class="provider-name">Contabo</div>
+    
+    <p><strong>Sitio web:</strong> contabo.com</p>
+    
+    <p><strong>Metodos de pago aceptados:</strong></p>
+    <ul>
+        <li>Tarjetas de credito (Visa, Mastercard, Amex)</li>
+        <li>PayPal</li>
+        <li>Transferencia bancaria</li>
+    </ul>
+    
+    <p><strong>Precios (Cloud VPS):</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>SSD</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cloud VPS S</td>
+                <td>4 vCPU</td>
+                <td>8 GB</td>
+                <td>50 GB</td>
+                <td class="price-highlight">$5.50/mes</td>
+            </tr>
+            <tr>
+                <td><strong>Recomendado ERP</strong></td>
+                <td>6 vCPU</td>
+                <td>16 GB</td>
+                <td>100 GB</td>
+                <td class="price-highlight">$12.50/mes</td>
+            </tr>
+            <tr>
+                <td>Cloud VPS L</td>
+                <td>8 vCPU</td>
+                <td>30 GB</td>
+                <td>200 GB</td>
+                <td class="price-highlight">$22.50/mes</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Ventajas:</strong></p>
+    <ul>
+        <li>Mucho RAM por el precio</li>
+        <li>Almacenamiento NVMe incluido</li>
+        <li>Proteccion DDoS gratuita</li>
+        <li>Servidores en multiples continentes</li>
+    </ul>
+    
+    <p><strong>Desventajas:</strong></p>
+    <ul>
+        <li>Tiempo de setup puede ser lento (hasta 3 horas)</li>
+        <li>La CPU es compartida (no dedicada)</li>
+        <li>Soporte no 24/7 (horario Alemania)</li>
+    </ul>
+</div>
+
+<h2 id="hostinger">2.5 Hostinger</h2>
+
+<div class="provider-card">
+    <div class="provider-name">Hostinger</div>
+    
+    <p><strong>Sitio web:</strong> hostinger.com</p>
+    
+    <p><strong>Metodos de pago aceptados:</strong></p>
+    <ul>
+        <li>Tarjetas de credito/debito/prepago (Visa, Mastercard, Amex, Discover, JCB, Maestro)</li>
+        <li>PayPal</li>
+        <li>Google Pay, Apple Pay</li>
+        <li>Criptomonedas (en algunos paises)</li>
+    </ul>
+    
+    <div class="success-box">
+        <div class="success-box-title">Buena opcion para principiantes</div>
+        <p>Hostinger tiene un panel de control muy facil de usar (hPanel) y buen soporte en espanol.</p>
+    </div>
+    
+    <p><strong>Precios (VPS):</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>SSD</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>KVM 1</td>
+                <td>1 vCPU</td>
+                <td>4 GB</td>
+                <td>50 GB</td>
+                <td class="price-highlight">$5.99/mes</td>
+            </tr>
+            <tr>
+                <td><strong>Recomendado ERP</strong></td>
+                <td>2 vCPU</td>
+                <td>8 GB</td>
+                <td>100 GB</td>
+                <td class="price-highlight">$7.99/mes</td>
+            </tr>
+            <tr>
+                <td>KVM 4</td>
+                <td>4 vCPU</td>
+                <td>16 GB</td>
+                <td>200 GB</td>
+                <td class="price-highlight">$15.99/mes</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Ventajas:</strong></p>
+    <ul>
+        <li>Panel de control muy facil (hPanel)</li>
+        <li>Soporte en espanol 24/7</li>
+        <li>Acepta tarjetas prepago</li>
+        <li>Garantia de 30 dias</li>
+    </ul>
+    
+    <p><strong>Desventajas:</strong></p>
+    <ul>
+        <li>El precio promocional solo es para el primer ano</li>
+        <li>Renovaciones mas caras</li>
+    </ul>
+</div>
+
+<h2 id="linode">2.6 Linode (Akamai)</h2>
+
+<div class="provider-card">
+    <div class="provider-name">Linode (Akamai)</div>
+    
+    <p><strong>Sitio web:</strong> linode.com</p>
+    
+    <p><strong>Metodos de pago aceptados:</strong></p>
+    <ul>
+        <li>Tarjetas de credito (Visa, Mastercard, Amex, Discover)</li>
+        <li>PayPal</li>
+        <li>Google Pay</li>
+    </ul>
+    
+    <p><strong>Precios (Shared CPU):</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Plan</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>SSD</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Nanode</td>
+                <td>1 vCPU</td>
+                <td>1 GB</td>
+                <td>25 GB</td>
+                <td class="price-highlight">$5/mes</td>
+            </tr>
+            <tr>
+                <td>Linode 2GB</td>
+                <td>1 vCPU</td>
+                <td>2 GB</td>
+                <td>50 GB</td>
+                <td class="price-highlight">$12/mes</td>
+            </tr>
+            <tr>
+                <td><strong>Recomendado ERP</strong></td>
+                <td>2 vCPU</td>
+                <td>4 GB</td>
+                <td>80 GB</td>
+                <td class="price-highlight">$24/mes</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p><strong>Ventajas:</strong></p>
+    <ul>
+        <li>Muy estable y confiable</li>
+        <li>Buena documentacion</li>
+        <li>Soporte tecnico excelente</li>
+        <li>Mucho trafico incluido</li>
+    </ul>
+    
+    <p><strong>Desventajas:</strong></p>
+    <ul>
+        <li>Precio mas alto que la competencia</li>
+        <li>Interfaz menos moderna</li>
+    </ul>
+</div>
+
+<!-- COMPARACION -->
+<h1 id="comparacion" class="page-break">3. Tabla Comparativa</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Proveedor</th>
+            <th>Precio Base</th>
+            <th>Recomendado ERP</th>
+            <th>Facilidad</th>
+            <th>Pago</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>DigitalOcean</strong></td>
+            <td>$4/mes</td>
+            <td>$24/mes</td>
+            <td>Muy Facil</td>
+            <td>Tarjeta, PayPal</td>
+        </tr>
+        <tr>
+            <td><strong>Vultr</strong></td>
+            <td>$2.50/mes</td>
+            <td>$20/mes</td>
+            <td>Facil</td>
+            <td>Tarjeta, PayPal, Bitcoin</td>
+        </tr>
+        <tr>
+            <td><strong>Hetzner</strong></td>
+            <td>3.49 EUR/mes</td>
+            <td>7.72 EUR/mes</td>
+            <td>Medio</td>
+            <td>Tarjeta, PayPal</td>
+        </tr>
+        <tr>
+            <td><strong>Contabo</strong></td>
+            <td>$5.50/mes</td>
+            <td>$12.50/mes</td>
+            <td>Medio</td>
+            <td>Tarjeta, PayPal</td>
+        </tr>
+        <tr>
+            <td><strong>Hostinger</strong></td>
+            <td>$5.99/mes</td>
+            <td>$7.99/mes</td>
+            <td>Muy Facil</td>
+            <td>Tarjeta prepago, PayPal</td>
+        </tr>
+        <tr>
+            <td><strong>Linode</strong></td>
+            <td>$5/mes</td>
+            <td>$24/mes</td>
+            <td>Facil</td>
+            <td>Tarjeta, PayPal</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="info-box">
+    <div class="info-box-title">Mi Recomendacion Final</div>
+    <p><strong>Si eres principiante:</strong> DigitalOcean o Hostinger</p>
+    <p><strong>Si quieres ahorrar:</strong> Hetzner o Contabo</p>
+    <p><strong>Si tienes Bitcoin:</strong> Vultr</p>
+    <p><strong>Si necesitas soporte en espanol:</strong> Hostinger</p>
+</div>
+
+<!-- GUIA DIGITALOCEAN -->
+<h1 id="guia-digitalocean" class="page-break">4. Guia Paso a Paso: DigitalOcean</h1>
+
+<p>Aqui te explico como crear tu servidor paso a paso en DigitalOcean:</p>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Crear cuenta en DigitalOcean</div>
+        <ul>
+            <li>Ve a <strong>digitalocean.com</strong></li>
+            <li>Haz clic en <strong>"Sign Up"</strong></li>
+            <li>Usa tu correo electronico o GitHub</li>
+            <li>Verifica tu correo</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Agregar metodo de pago</div>
+        <ul>
+            <li>Ve a <strong>Billing</strong> en el menu</li>
+            <li>Haz clic en <strong>"Add Payment Method"</strong></li>
+            <li>Selecciona <strong>"Credit/Debit Card"</strong></li>
+            <li>Ingresa los datos de tu tarjeta virtual (Zinli, Wally, etc.)</li>
+            <li>DigitalOcean hara un cargo de $1 para verificar (se devuelve)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Crear un Droplet (servidor)</div>
+        <ul>
+            <li>Haz clic en <strong>"Create"</strong> y selecciona <strong>"Droplets"</strong></li>
+            <li>Elige la region (recomendado: New York o Miami)</li>
+            <li>Selecciona el sistema operativo: <strong>Ubuntu 22.04 (LTS)</strong></li>
+            <li>Elige el plan: <strong>Basic</strong> o <strong>General Purpose</strong></li>
+            <li>Selecciona el tamano (recomendado: $24/mes - 2CPU/4GB)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">4</div>
+    <div class="step-content">
+        <div class="step-title">Configurar acceso</div>
+        <ul>
+            <li>En <strong>Authentication</strong>, selecciona <strong>"Password"</strong></li>
+            <li>Crea una contrasena segura para root</li>
+            <li>(O usa SSH key si sabes como)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">5</div>
+    <div class="step-content">
+        <div class="step-title">Crear el Droplet</div>
+        <ul>
+            <li>Selecciona cantidad: <strong>1</strong></li>
+            <li>Asigna un nombre (ej: servistech-erp)</li>
+            <li>Haz clic en <strong>"Create Droplet"</strong></li>
+            <li>Espera 1-2 minutos a que este listo</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">6</div>
+    <div class="step-content">
+        <div class="step-title">Conectar al servidor</div>
+        <ul>
+            <li>Descarga <strong>PuTTY</strong> (Windows) o usa Terminal (Mac/Linux)</li>
+            <li>Copia la IP de tu Droplet</li>
+            <li>Conectate via SSH con usuario <strong>root</strong></li>
+            <li>Instala Docker y Docker Compose</li>
+        </ul>
+    </div>
+</div>
+
+<div class="success-box">
+    <div class="success-box-title">Listo!</div>
+    <p>Ahora tienes un servidor funcionando. El siguiente paso es instalar Docker y subir tu proyecto.</p>
+</div>
+
+<!-- ALTERNATIVAS -->
+<h1 id="alternativas" class="page-break">5. Alternativas de Pago</h1>
+
+<p>Si tu tarjeta virtual no funciona directamente, prueba estas alternativas:</p>
+
+<h2>5.1 PayPal</h2>
+
+<p>Muchos proveedores (DigitalOcean, Vultr, Linode, Hostinger) aceptan PayPal:</p>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Cargar saldo en PayPal</div>
+        <ul>
+            <li>Usa <strong>AirTM</strong> para transferir de bolivares a PayPal</li>
+            <li>O pide a un familiar que te envie dinero</li>
+            <li>O usa servicios de remesas</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Pagar con saldo de PayPal</div>
+        <ul>
+            <li>En el proveedor, selecciona PayPal como metodo de pago</li>
+            <li>Inicia sesion en PayPal</li>
+            <li>Selecciona pagar con saldo de PayPal (no con tarjeta)</li>
+        </ul>
+    </div>
+</div>
+
+<h2>5.2 Bitcoin / Criptomonedas</h2>
+
+<p>Vultr acepta Bitcoin directamente:</p>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Comprar Bitcoin</div>
+        <ul>
+            <li>Usa <strong>Binance P2P</strong> para comprar con bolivares</li>
+            <li>O cualquier exchange que funcione en Venezuela</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Pagar en Vultr</div>
+        <ul>
+            <li>Ve a Billing en Vultr</li>
+            <li>Selecciona <strong>"Add Funds"</strong></li>
+            <li>Selecciona <strong>Bitcoin</strong></li>
+            <li>Envia el monto exacto a la direccion mostrada</li>
+        </ul>
+    </div>
+</div>
+
+<!-- CONSEJOS -->
+<h1 id="consejos" class="page-break">6. Consejos Finales</h1>
+
+<h2>6.1 Configuracion Minima Recomendada</h2>
+
+<p>Para que SERVISTECH ERP funcione bien, necesitas:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Recurso</th>
+            <th>Minimo</th>
+            <th>Recomendado</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>CPU</td>
+            <td>1 vCPU</td>
+            <td>2 vCPU</td>
+        </tr>
+        <tr>
+            <td>RAM</td>
+            <td>2 GB</td>
+            <td>4 GB</td>
+        </tr>
+        <tr>
+            <td>Almacenamiento</td>
+            <td>20 GB SSD</td>
+            <td>50 GB SSD</td>
+        </tr>
+        <tr>
+            <td>Transferencia</td>
+            <td>1 TB/mes</td>
+            <td>2 TB/mes</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>6.2 Presupuesto Mensual Estimado</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Configuracion</th>
+            <th>DigitalOcean</th>
+            <th>Hetzner</th>
+            <th>Hostinger</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Basico (1CPU/2GB)</td>
+            <td>$12/mes</td>
+            <td>~$4/mes</td>
+            <td>$6/mes</td>
+        </tr>
+        <tr>
+            <td><strong>Recomendado (2CPU/4GB)</strong></td>
+            <td><strong>$24/mes</strong></td>
+            <td><strong>~$8/mes</strong></td>
+            <td><strong>$8/mes</strong></td>
+        </tr>
+        <tr>
+            <td>Avanzado (4CPU/8GB)</td>
+            <td>$48/mes</td>
+            <td>~$15/mes</td>
+            <td>$16/mes</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>6.3 Checklist antes de empezar</h2>
+
+<ul class="checklist">
+    <li>Tengo tarjeta virtual activa (Zinli, Wally, etc.)</li>
+    <li>Tengo saldo disponible en la tarjeta</li>
+    <li>Tengo mi dominio configurado en Cloudflare</li>
+    <li>Tengo los archivos del proyecto listos</li>
+    <li>Tengo una hora libre para configurar todo</li>
+</ul>
+
+<h2>6.4 Si tienes problemas</h2>
+
+<div class="warning-box">
+    <div class="warning-box-title">Problemas comunes</div>
+    <ul>
+        <li><strong>"Card declined"</strong> - Intenta con PayPal en su lugar</li>
+        <li><strong>"Verification required"</strong> - Normal en Hetzner, sube documentos</li>
+        <li><strong>"Insufficient funds"</strong> - Asegurate de tener saldo + 20% extra</li>
+        <li><strong>"Country not supported"</strong> - Prueba con otro proveedor</li>
+    </ul>
+</div>
+
+<div class="info-box">
+    <div class="info-box-title">Soporte de cada proveedor</div>
+    <ul>
+        <li><strong>DigitalOcean:</strong> Tickets en ingles, comunidad activa</li>
+        <li><strong>Hostinger:</strong> Chat en espanol 24/7</li>
+        <li><strong>Hetzner:</strong> Tickets en ingles/aleman</li>
+        <li><strong>Vultr:</strong> Tickets en ingles</li>
+    </ul>
+</div>
+
+<div class="section-break">***</div>
+
+<p style="text-align: center; color: #666; font-size: 10pt; margin-top: 2cm;">
+    <strong>Guia de Opciones de Hosting para Venezuela</strong><br>
+    Con Tarjeta de Debito Virtual<br>
+    Version 1.0 - Febrero 2025
+</p>
+
+</body>
+</html>
