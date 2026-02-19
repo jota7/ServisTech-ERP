@@ -99,3 +99,4 @@ USER nodejs
 
 # Comando de inicio (Ajustado para asegurar que Prisma esté listo)
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+# Comentario para forzar despliegue
