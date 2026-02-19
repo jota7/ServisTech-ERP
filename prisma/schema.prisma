@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -96,23 +93,16 @@ model User {
   role      UserRole @default(ANFITRION)
   isActive  Boolean  @default(true)
   avatar    String?
-  
-  // Relations
   storeId   String?
   store     Store?   @relation(fields: [storeId], references: [id])
-  
-  // Audit
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lastLogin DateTime?
-  
-  // Relations
   ordersCreated   ServiceOrder[] @relation("CreatedBy")
   ordersAssigned  ServiceOrder[] @relation("AssignedTo")
   timeEntries     TimeEntry[]
   cashRegisters   CashRegister[]
   auditLogs       AuditLog[]
-  
   @@map("users")
 }
 
@@ -125,13 +115,9 @@ model Store {
   email           String
   logo            String?
   isActive        Boolean        @default(true)
-  
-  // Fiscal Data
   rif             String?
   razonSocial     String?
   direccionFiscal String?
-  
-  // Relations
   users           User[]
   orders          ServiceOrder[]
   parts           PartStock[]
@@ -139,14 +125,10 @@ model Store {
   safeKits        SafeKit[]
   courtesyDevices CourtesyDevice[]
   invoices        Invoice[]
-
-  // Inverse relations for transfers
   transfersFrom   StockTransfer[] @relation("FromTransfer")
   transfersTo     StockTransfer[] @relation("ToTransfer")
-  
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  
   @@map("stores")
 }
 
@@ -154,11 +136,9 @@ model BCVRate {
   id          String   @id @default(uuid())
   rate        Decimal  @db.Decimal(10, 2)
   date        DateTime @default(now())
-  source      String   // 'automatic' | 'manual'
+  source      String
   updatedBy   String?
-  
   createdAt   DateTime @default(now())
-  
   @@map("bcv_rates")
 }
 
@@ -169,16 +149,12 @@ model Customer {
   phone       String
   documentId  String   @unique
   address     String?
-  
-  // Relations
   devices     Device[]
   orders      ServiceOrder[]
   invoices    Invoice[]
   loans       DeviceLoan[]
-  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
   @@map("customers")
 }
 
@@ -192,15 +168,11 @@ model Device {
   color         String?
   storage       String?
   notes         String?
-  
-  // Relations
   customerId    String
   customer      Customer       @relation(fields: [customerId], references: [id])
   orders        ServiceOrder[]
-  
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  
   @@map("devices")
 }
 
@@ -209,35 +181,24 @@ model ServiceOrder {
   orderNumber       String       @unique
   status            OrderStatus  @default(TRIAJE)
   priority          Priority     @default(MEDIA)
-  
-  // Reception
   reportedIssue     String
   termsAccepted     Boolean      @default(false)
   customerSignature String?
-  
-  // Technical
   diagnosis         String?
   solution          String?
-  
-  // Financial
   estimatedCost     Decimal      @default(0) @db.Decimal(10, 2)
   finalCost         Decimal      @default(0) @db.Decimal(10, 2)
   paidAmount        Decimal      @default(0) @db.Decimal(10, 2)
-  
-  // Relations
   customerId      String
   customer        Customer     @relation(fields: [customerId], references: [id])
   deviceId        String
   device          Device       @relation(fields: [deviceId], references: [id])
   storeId         String
   store           Store        @relation(fields: [storeId], references: [id])
-  
   createdById      String
   createdBy        User         @relation("CreatedBy", fields: [createdById], references: [id])
   assignedToId     String?
   assignedTo       User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
-  
-  // Related data
   checklist       ChecklistItem[]
   photos          Photo[]
   partsUsed       PartUsage[]
@@ -245,15 +206,11 @@ model ServiceOrder {
   timeEntries     TimeEntry[]
   qaResult        QAResult?
   invoice         Invoice?
-  
-  // Logistics
-  safeKit         SafeKit?
-  
-  // Timestamps
+  safeKitId       String?       @unique
+  safeKit         SafeKit?      @relation(fields: [safeKitId], references: [id])
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   completedAt     DateTime?
-  
   @@map("service_orders")
 }
 
@@ -263,28 +220,21 @@ model ChecklistItem {
   item        String
   checked     Boolean      @default(false)
   notes       String?
-  
   orderId     String
   order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
   @@map("checklist_items")
 }
 
 model Photo {
   id          String       @id @default(uuid())
   url         String
-  type        String       // 'exterior' | 'interior' | 'document' | 'other'
+  type        String
   description String?
-  
   orderId     String
   order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
-  // For internal photos relation
   internalOrderId String?
   internalOrder   ServiceOrder? @relation("InternalPhotos", fields: [internalOrderId], references: [id])
-  
   uploadedAt  DateTime     @default(now())
-  
   @@map("photos")
 }
 
@@ -295,26 +245,18 @@ model Part {
   description       String?
   category          String
   compatibleModels  String[]
-  
-  // Pricing
   costPrice         Decimal      @db.Decimal(10, 2)
   salePrice         Decimal      @db.Decimal(10, 2)
   shippingCost      Decimal      @default(0) @db.Decimal(10, 2)
   operationalCost   Decimal      @default(0) @db.Decimal(10, 2)
   warrantyFund      Decimal      @default(0) @db.Decimal(10, 2)
-  
-  // Stock management
   minStock          Int          @default(3)
   supplier          String?
-  
-  // Relations
   stock             PartStock[]
   transfers         StockTransfer[]
   usages            PartUsage[]
-  
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
-  
   @@map("parts")
 }
 
@@ -322,12 +264,10 @@ model PartStock {
   id        String   @id @default(uuid())
   quantity  Int      @default(0)
   reserved  Int      @default(0)
-  
   partId    String
   part      Part     @relation(fields: [partId], references: [id])
   storeId   String
   store     Store    @relation(fields: [storeId], references: [id])
-  
   @@unique([partId, storeId])
   @@map("part_stocks")
 }
@@ -336,21 +276,17 @@ model StockTransfer {
   id            String         @id @default(uuid())
   quantity      Int
   status        TransferStatus @default(PENDING)
-  
   partId        String
   part          Part           @relation(fields: [partId], references: [id])
   fromStoreId   String
   fromStore     Store          @relation("FromTransfer", fields: [fromStoreId], references: [id])
   toStoreId     String
   toStore       Store          @relation("ToTransfer", fields: [toStoreId], references: [id])
-  
   requestedBy   String
   approvedBy    String?
-  
   sentAt        DateTime?
   receivedAt    DateTime?
   createdAt     DateTime       @default(now())
-  
   @@map("stock_transfers")
 }
 
@@ -359,12 +295,10 @@ model PartUsage {
   quantity    Int
   costPrice   Decimal      @db.Decimal(10, 2)
   salePrice   Decimal      @db.Decimal(10, 2)
-  
   partId      String
   part        Part         @relation(fields: [partId], references: [id])
   orderId     String
   order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
   @@map("part_usages")
 }
 
@@ -372,14 +306,12 @@ model TimeEntry {
   id          String       @id @default(uuid())
   startTime   DateTime
   endTime     DateTime?
-  duration    Int?         // in minutes
+  duration    Int?
   description String
-  
   technicianId String
   technician   User         @relation(fields: [technicianId], references: [id])
   orderId      String
   order        ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
   @@map("time_entries")
 }
 
@@ -388,13 +320,10 @@ model QAResult {
   passed      Boolean
   testDate    DateTime     @default(now())
   notes       String?
-  
   orderId     String       @unique
   order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   testedBy    String
-  
   tests       QATest[]
-  
   @@map("qa_results")
 }
 
@@ -403,10 +332,8 @@ model QATest {
   name        String
   passed      Boolean      @default(false)
   notes       String?
-  
   qaResultId  String
   qaResult    QAResult     @relation(fields: [qaResultId], references: [id], onDelete: Cascade)
-  
   @@map("qa_tests")
 }
 
@@ -415,16 +342,11 @@ model SafeKit {
   code            String          @unique
   name            String
   qrCode          String
-  status          String          @default("available") // 'available' | 'in-use' | 'maintenance'
-  
+  status          String          @default("available")
   storeId         String
   store           Store           @relation(fields: [storeId], references: [id])
-  
-  currentOrderId  String?         @unique
-  currentOrder    ServiceOrder?   @relation(fields: [currentOrderId], references: [id])
-  
+  currentOrder    ServiceOrder?
   createdAt       DateTime        @default(now())
-  
   @@map("safe_kits")
 }
 
@@ -434,15 +356,11 @@ model CourtesyDevice {
   brand         DeviceBrand
   model         String
   serialNumber  String       @unique
-  status        String       @default("available") // 'available' | 'loaned' | 'maintenance'
-  
+  status        String       @default("available")
   storeId       String
   store         Store        @relation(fields: [storeId], references: [id])
-  
   loans         DeviceLoan[]
-  
   createdAt     DateTime     @default(now())
-  
   @@map("courtesy_devices")
 }
 
@@ -453,60 +371,47 @@ model DeviceLoan {
   actualReturnDate  DateTime?
   condition         String
   notes             String?
-  
   deviceId          String
   device            CourtesyDevice @relation(fields: [deviceId], references: [id])
   customerId        String
   customer          Customer       @relation(fields: [customerId], references: [id])
   orderId           String
-  
   @@map("device_loans")
 }
 
 model Invoice {
   id              String         @id @default(uuid())
   invoiceNumber   String         @unique
-  
-  // Totals
   subtotal        Decimal        @db.Decimal(10, 2)
   igtfAmount      Decimal        @default(0) @db.Decimal(10, 2)
   discount        Decimal        @default(0) @db.Decimal(10, 2)
   total           Decimal        @db.Decimal(10, 2)
   totalVES        Decimal        @db.Decimal(10, 2)
-  
-  // Payment tracking
   paidTotal       Decimal        @default(0) @db.Decimal(10, 2)
   status          InvoiceStatus  @default(PENDING)
-  
-  // Relations
   customerId      String
   customer        Customer       @relation(fields: [customerId], references: [id])
   storeId         String
   store           Store          @relation(fields: [storeId], references: [id])
   orderId         String?        @unique
   order           ServiceOrder?  @relation(fields: [orderId], references: [id])
-  
   items           InvoiceItem[]
   payments        Payment[]
-  
   createdBy       String
   createdAt       DateTime       @default(now())
   paidAt          DateTime?
-  
   @@map("invoices")
 }
 
 model InvoiceItem {
   id          String   @id @default(uuid())
-  type        String   // 'service' | 'part' | 'accessory'
+  type        String
   description String
   quantity    Int
   unitPrice   Decimal  @db.Decimal(10, 2)
   total       Decimal  @db.Decimal(10, 2)
-  
   invoiceId   String
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  
   @@map("invoice_items")
 }
 
@@ -520,6 +425,82 @@ model Payment {
   phoneNumber String?
   email       String?
   timestamp   DateTime      @default(now())
-  
   invoiceId   String
-  invoice     Invoice        @relation(fields: [invoiceId
+  invoice     Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  @@map("payments")
+}
+
+model CashRegister {
+  id              String          @id @default(uuid())
+  openingUSD      Decimal         @db.Decimal(10, 2)
+  openingVES      Decimal         @db.Decimal(10, 2)
+  declaredUSD     Decimal?        @db.Decimal(10, 2)
+  declaredVES     Decimal?        @db.Decimal(10, 2)
+  systemUSD       Decimal         @db.Decimal(10, 2)
+  systemVES       Decimal         @db.Decimal(10, 2)
+  discrepancyUSD  Decimal?        @db.Decimal(10, 2)
+  discrepancyVES  Decimal?        @db.Decimal(10, 2)
+  status          RegisterStatus
+  storeId         String
+  store           Store           @relation(fields: [storeId], references: [id])
+  openedById      String
+  openedBy        User            @relation(fields: [openedById], references: [id])
+  closedById      String?
+  expenses        PettyCashExpense[]
+  openedAt        DateTime        @default(now())
+  closedAt        DateTime?
+  @@map("cash_registers")
+}
+
+model PettyCashExpense {
+  id          String       @id @default(uuid())
+  description String
+  amount      Decimal      @db.Decimal(10, 2)
+  currency    String
+  category    String
+  receiptPhoto String?
+  registerId  String
+  register    CashRegister @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  createdBy   String
+  createdAt   DateTime     @default(now())
+  @@map("petty_cash_expenses")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  entityType  String
+  entityId    String
+  oldValue    Json?
+  newValue    Json?
+  ipAddress   String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  timestamp   DateTime @default(now())
+  @@map("audit_logs")
+}
+
+model WhatsAppTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  trigger     String
+  content     String
+  variables   String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@map("whatsapp_templates")
+}
+
+model AppSetting {
+  id                      String   @id @default(uuid())
+  companyName             String   @default("SERVISTECH")
+  defaultWarrantyDays     Int      @default(90)
+  igtfPercentage          Decimal  @default(3) @db.Decimal(5, 2)
+  warrantyFundPercentage  Decimal  @default(10) @db.Decimal(5, 2)
+  bcvAutoSync             Boolean  @default(true)
+  bcvSyncHour             Int      @default(8)
+  whatsappEnabled         Boolean  @default(true)
+  updatedAt               DateTime @updatedAt
+  @@map("app_settings")
+}
