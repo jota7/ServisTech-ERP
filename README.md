@@ -1,316 +1,346 @@
-# 🏢 SERVISTECH ERP V4.0
+# 🚀 SERVISTECH ERP - Backend API
 
-Sistema ERP completo para gestión técnica y comercial de servicios de reparación de dispositivos móviles.
+API REST completa para el sistema ERP de gestión técnica y comercial.
 
-[![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)](https://semver.org)
-[![Docker](https://img.shields.io/badge/docker-ready-green.svg)](https://docker.com)
-[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
+## 📋 Requisitos
 
----
+- Node.js 20+
+- PostgreSQL 15+
+- Redis 7+ (opcional, para caché)
 
-## ✨ Características Principales
+## 🚀 Instalación Rápida
 
-### 🔐 Multi-tenancy con RLS (Row Level Security)
-- Aislamiento completo de datos por tienda
-- Políticas de seguridad a nivel de base de datos
-- Super admin con acceso global
-
-### 📋 Gestión de Garantías (V4.0)
-- Sistema independiente de garantías
-- Kanban con carril prioritario
-- Causas de falla: ERROR_HUMANO, REPUESTO_DEFECTUOSO, DESGASTE, FACTOR_EXTERNO
-- Fotos obligatorias de evidencia
-
-### 💰 Sistema de Comisiones
-- Técnicos: 35% de utilidad bruta
-- Gerentes: $1 + 10% de utilidad
-- Débitos/contra-cargos configurables
-- Reporte de nómina automatizado
-
-### 🎯 Metas Financieras
-- Cálculo automático de punto de equilibrio
-- Gastos fijos configurables (alquiler, servicios, nómina)
-- Seguimiento diario de progreso
-
-### 🚚 Portal de Delivery
-- Tracking GPS de mensajeros
-- Fotos de entrega con geolocalización
-- Firma digital del cliente
-- URL pública de seguimiento
-
-### 💵 Caja Chica
-- Registro con fotos de recibos
-- Aprobación por supervisor
-- Conciliación automática
-
-### 💱 Tasas de Cambio
-- Scraping automático del BCV (8AM y 1PM)
-- Integración con Binance P2P (USDT)
-- Cache en Redis para rendimiento
-
----
-
-## 🚀 Despliegue Rápido
-
-### Opción 1: Docker Compose (Recomendado)
+### Opción 1: Docker (Recomendado)
 
 ```bash
-# 1. Clonar repositorio
-git clone https://github.com/tu-usuario/servistech-erp.git
-cd servistech-erp
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/servistech-api.git
+cd servistech-api
 
-# 2. Configurar variables
+# 2. Configurar variables de entorno
 cp .env.example .env
-# Editar .env con tus valores
+# Editar .env con tus configuraciones
 
-# 3. Desplegar
-./deploy.sh
+# 3. Iniciar con Docker Compose
+docker-compose up -d
+
+# 4. Ver logs
+docker-compose logs -f api
 ```
 
-### Opción 2: Railway.app
+### Opción 2: Instalación Manual
 
 ```bash
-# Instalar CLI
-npm install -g @railway/cli
+# 1. Instalar dependencias
+npm install
 
-# Login y desplegar
-railway login
-railway init
-railway up
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus configuraciones
+
+# 3. Configurar base de datos
+npx prisma migrate dev
+npx prisma db seed
+
+# 4. Iniciar en modo desarrollo
+npm run dev
+
+# 5. O iniciar en modo producción
+npm run build
+npm start
 ```
-
-### Opción 3: Render.com
-
-1. Fork este repositorio
-2. En Render: "New" → "Blueprint"
-3. Conectar repositorio
-4. Click "Apply"
-
----
 
 ## 📁 Estructura del Proyecto
 
 ```
-servistech-erp/
-├── api/                          # Backend API (Node.js + Express)
-│   ├── prisma/
-│   │   └── schema.prisma         # Esquema de base de datos
-│   ├── src/
-│   │   ├── controllers/          # Controladores de API
-│   │   ├── middleware/           # Middleware (RLS, Auth, Audit)
-│   │   ├── services/             # Servicios (Rates, etc.)
-│   │   └── routes/               # Definición de rutas
-│   ├── Dockerfile                # Imagen Docker del API
-│   └── package.json
-├── app/                          # Frontend (React + Vite)
-│   ├── src/
-│   │   ├── components/           # Componentes React
-│   │   ├── pages/                # Páginas
-│   │   └── hooks/                # Custom hooks
-│   ├── vercel.json               # Configuración Vercel
-│   └── package.json
-├── websocket/                    # Servidor WebSocket
-│   ├── server.js                 # Servidor de tiempo real
-│   └── Dockerfile
-├── cron/                         # Tareas programadas
-│   ├── scripts/                  # Scripts de scraping y backup
-│   ├── crontab                   # Programación de tareas
-│   └── Dockerfile
-├── nginx/                        # Reverse Proxy
-│   ├── nginx.conf                # Configuración principal
-│   └── conf.d/                   # Virtual hosts
-├── scripts/                      # Scripts de utilidad
-│   └── postgres/
-│       └── init-rls.sql          # Inicialización RLS
-├── docker-compose.yml            # Orquestación de servicios
-├── deploy.sh                     # Script de despliegue
-├── DEPLOYMENT.md                 # Guía completa de despliegue
-└── README.md                     # Este archivo
+api/
+├── src/
+│   ├── config/         # Configuración (DB, etc.)
+│   ├── controllers/    # Controladores de rutas
+│   ├── middleware/     # Middleware (auth, validación, errores)
+│   ├── routes/         # Definición de rutas
+│   ├── services/       # Servicios (BCV scraper, etc.)
+│   ├── utils/          # Utilidades (logger, schemas, response)
+│   └── server.ts       # Punto de entrada
+├── prisma/
+│   ├── schema.prisma   # Esquema de base de datos
+│   └── seed.ts         # Datos iniciales
+├── docker-compose.yml  # Configuración Docker
+├── Dockerfile          # Imagen Docker
+└── package.json
 ```
 
----
-
-## 🛠️ Tecnologías
-
-### Backend
-- **Node.js 20** + Express
-- **Prisma ORM** + PostgreSQL 15
-- **Redis** para cache y sesiones
-- **PgBouncer** para connection pooling
-- **JWT** para autenticación
-- **Puppeteer** para web scraping
-
-### Frontend
-- **React 18** + TypeScript
-- **Vite** para build
-- **Tailwind CSS** para estilos
-- **shadcn/ui** para componentes
-- **Socket.io-client** para WebSocket
-
-### Infraestructura
-- **Docker** + Docker Compose
-- **Nginx** reverse proxy
-- **Let's Encrypt** SSL
-- **Cloudflare** CDN + DDoS
-- **AWS S3** para backups
-
----
-
-## 📊 Arquitectura
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      CLOUDFLARE CDN                         │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      NGINX (443/80)                         │
-│              SSL + Load Balancer + Rate Limit               │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  API (3001)  │    │   WS (3002)  │    │  Cron (---)  │
-│  Node.js     │    │  WebSocket   │    │  Scheduler   │
-└──────────────┘    └──────────────┘    └──────────────┘
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ PostgreSQL   │    │  PgBouncer   │    │    Redis     │
-│   (5432)     │    │   (6432)     │    │   (6379)     │
-└──────────────┘    └──────────────┘    └──────────────┘
-```
-
----
-
-## 🔧 Configuración
-
-### Variables de Entorno Críticas
+## 🔐 Variables de Entorno
 
 ```env
 # Database
-POSTGRES_PASSWORD=tu_password_seguro
-DATABASE_URL=postgresql://user:pass@pgbouncer:6432/db
+DATABASE_URL="postgresql://user:password@localhost:5432/servistech?schema=public"
 
 # JWT
-JWT_SECRET=tu_clave_secreta_32_caracteres_minimo
+JWT_SECRET="tu_secreto_super_seguro_aqui_minimo_32_caracteres"
+JWT_EXPIRES_IN="7d"
 
-# AWS S3 (Backups)
-AWS_ACCESS_KEY_ID=tu_access_key
-AWS_SECRET_ACCESS_KEY=tu_secret_key
-BACKUP_S3_BUCKET=tu-bucket
+# Server
+PORT=3000
+NODE_ENV=development
 
-# Slack (Notificaciones)
-SLACK_WEBHOOK=https://hooks.slack.com/services/...
+# Frontend URL (para CORS)
+FRONTEND_URL="http://localhost:5173"
+
+# BCV Scraper
+BCV_SCRAPER_ENABLED=true
+BCV_SCRAPER_CRON="0 8 * * *"
+
+# Redis (opcional)
+REDIS_URL="redis://localhost:6379"
 ```
 
-Ver `.env.example` para lista completa.
+## 📚 API Endpoints
 
----
+### Autenticación
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Iniciar sesión |
+| POST | `/api/auth/register` | Registrar usuario (Admin) |
+| GET | `/api/auth/profile` | Perfil del usuario |
+| POST | `/api/auth/refresh` | Refrescar token |
+| POST | `/api/auth/change-password` | Cambiar contraseña |
 
-## 📖 Documentación
+### Usuarios
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/users` | Listar usuarios |
+| GET | `/api/users/:id` | Obtener usuario |
+| POST | `/api/users` | Crear usuario |
+| PUT | `/api/users/:id` | Actualizar usuario |
+| DELETE | `/api/users/:id` | Eliminar usuario |
+| POST | `/api/users/:id/reset-password` | Resetear contraseña |
 
-- [Guía de Despliegue](DEPLOYMENT.md) - Despliegue completo paso a paso
-- [API Documentation](api/docs) - Documentación de endpoints
-- [Changelog](CHANGELOG.md) - Historial de cambios
+### Clientes
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/customers` | Listar clientes |
+| GET | `/api/customers/:id` | Obtener cliente |
+| POST | `/api/customers` | Crear cliente |
+| PUT | `/api/customers/:id` | Actualizar cliente |
+| DELETE | `/api/customers/:id` | Eliminar cliente |
+| GET | `/api/customers/stats/:id` | Estadísticas del cliente |
 
----
+### Órdenes de Servicio
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/orders` | Listar órdenes |
+| GET | `/api/orders/kanban/board` | Tablero Kanban |
+| GET | `/api/orders/:id` | Obtener orden |
+| POST | `/api/orders` | Crear orden |
+| PUT | `/api/orders/:id` | Actualizar orden |
+| PATCH | `/api/orders/:id/status` | Cambiar estado |
+| POST | `/api/orders/:id/parts` | Agregar repuesto |
+| POST | `/api/orders/:id/time` | Iniciar timer |
+| PATCH | `/api/orders/:id/time/:entryId/end` | Finalizar timer |
 
-## 🧪 Desarrollo Local
+### Inventario
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/inventory/parts` | Listar repuestos |
+| GET | `/api/inventory/parts/:id` | Obtener repuesto |
+| POST | `/api/inventory/parts` | Crear repuesto |
+| PUT | `/api/inventory/parts/:id` | Actualizar repuesto |
+| POST | `/api/inventory/parts/:id/stock` | Actualizar stock |
+| GET | `/api/inventory/transfers` | Listar transferencias |
+| POST | `/api/inventory/transfers` | Crear transferencia |
+| PATCH | `/api/inventory/transfers/:id/status` | Actualizar transferencia |
 
-### Requisitos
-- Node.js 20+
-- Docker + Docker Compose
-- Git
+### Facturación
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/invoices` | Listar facturas |
+| GET | `/api/invoices/:id` | Obtener factura |
+| POST | `/api/invoices` | Crear factura |
+| POST | `/api/invoices/:id/payments` | Agregar pago |
+| PATCH | `/api/invoices/:id/cancel` | Cancelar factura |
+| GET | `/api/invoices/reports/daily` | Reporte diario |
 
-### Setup
+### Caja
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/cash-register/current/:storeId` | Caja actual |
+| GET | `/api/cash-register/history/:storeId` | Historial de cajas |
+| GET | `/api/cash-register/summary/:storeId` | Resumen de caja |
+| POST | `/api/cash-register/open/:storeId` | Abrir caja |
+| POST | `/api/cash-register/close/:id` | Cerrar caja |
+| POST | `/api/cash-register/expenses/:id` | Agregar gasto |
+
+### Sedes
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/stores` | Listar sedes |
+| GET | `/api/stores/:id` | Obtener sede |
+| POST | `/api/stores` | Crear sede |
+| PUT | `/api/stores/:id` | Actualizar sede |
+| DELETE | `/api/stores/:id` | Eliminar sede |
+| GET | `/api/stores/stats/:id` | Estadísticas de sede |
+
+### Dashboard
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/dashboard/kpis` | KPIs del dashboard |
+| GET | `/api/dashboard/charts/revenue` | Gráfico de ingresos |
+| GET | `/api/dashboard/charts/orders-by-status` | Órdenes por estado |
+| GET | `/api/dashboard/charts/top-services` | Servicios más solicitados |
+| GET | `/api/dashboard/activity/recent` | Actividad reciente |
+
+### BCV (Tasa de Cambio)
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/bcv/current` | Tasa actual |
+| GET | `/api/bcv/history` | Historial de tasas |
+| POST | `/api/bcv/update` | Actualizar tasa manual |
+| POST | `/api/bcv/scrape` | Ejecutar scraper |
+| POST | `/api/bcv/convert` | Convertir USD a VES |
+
+## 🔒 Autenticación
+
+La API usa JWT (JSON Web Tokens) para autenticación.
+
+### Headers requeridos:
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+### Obtener token:
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@servistech.com","password":"admin123"}'
+```
+
+## 👥 Roles y Permisos
+
+| Rol | Permisos |
+|-----|----------|
+| `SUPER_ADMIN` | Acceso total al sistema |
+| `GERENTE` | Gestión de sede, usuarios, reportes |
+| `ANFITRION` | Recepción, facturación, caja |
+| `TECNICO` | Diagnósticos, reparaciones |
+| `QA` | Control de calidad |
+| `ALMACEN` | Gestión de inventario |
+
+## 🗄️ Base de Datos
+
+### Comandos Prisma útiles:
 
 ```bash
-# 1. Instalar dependencias backend
-cd api
-npm install
+# Generar cliente Prisma
 npx prisma generate
-npx prisma migrate dev
 
-# 2. Instalar dependencias frontend
-cd ../app
-npm install
+# Crear migración
+npx prisma migrate dev --name nombre_migracion
 
-# 3. Iniciar servicios
-docker-compose up -d postgres redis
+# Aplicar migraciones
+npx prisma migrate deploy
 
-# 4. Iniciar backend (en otra terminal)
-cd api
-npm run dev
+# Resetear base de datos
+npx prisma migrate reset
 
-# 5. Iniciar frontend (en otra terminal)
-cd app
-npm run dev
+# Sembrar datos
+npx prisma db seed
+
+# Abrir Studio (UI de base de datos)
+npx prisma studio
 ```
 
----
-
-## 🔄 Actualización
+## 🧪 Testing
 
 ```bash
-# Actualizar a última versión
-git pull origin main
+# Ejecutar tests
+npm test
 
-# Reconstruir imágenes
-docker-compose pull
+# Ejecutar tests con coverage
+npm run test:coverage
+```
+
+## 📝 Logging
+
+Los logs se guardan en la carpeta `logs/`:
+- `combined.log` - Todos los logs
+- `error.log` - Solo errores
+- `exceptions.log` - Excepciones no capturadas
+
+## 🐳 Docker
+
+### Comandos útiles:
+
+```bash
+# Construir imagen
+docker build -t servistech-api .
+
+# Iniciar servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f api
+
+# Detener servicios
+docker-compose down
+
+# Detener y eliminar volúmenes
+docker-compose down -v
+
+# Reconstruir
 docker-compose up -d --build
-
-# Ejecutar migraciones
-docker-compose exec api npx prisma migrate deploy
 ```
 
----
+## 🚀 Deploy en Producción
 
-## 🐛 Solución de Problemas
+### Railway (Recomendado)
 
-### API no responde
+1. Crear cuenta en [railway.app](https://railway.app)
+2. Conectar repositorio de GitHub
+3. Agregar variables de entorno
+4. Deploy automático
+
+### Render
+
+1. Crear cuenta en [render.com](https://render.com)
+2. Crear nuevo Web Service
+3. Conectar repositorio
+4. Configurar variables de entorno
+5. Deploy
+
+### VPS (DigitalOcean, AWS, etc.)
+
 ```bash
-docker-compose logs api
-docker-compose restart api
-```
+# 1. Instalar Docker en el servidor
+curl -fsSL https://get.docker.com | sh
 
-### Error de base de datos
-```bash
-docker-compose exec postgres pg_isready -U servistech
-docker-compose restart postgres pgbouncer
-```
+# 2. Clonar repositorio
+git clone https://github.com/tu-usuario/servistech-api.git
+cd servistech-api
 
-### WebSocket no conecta
-```bash
-docker-compose logs websocket
-docker-compose exec redis redis-cli ping
-```
+# 3. Configurar variables de entorno
+nano .env
 
----
+# 4. Iniciar servicios
+docker-compose up -d
+
+# 5. Configurar SSL con Let's Encrypt
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
 
 ## 📞 Soporte
 
-- **Email**: soporte@servistech.com
-- **Slack**: #servistech-erp-support
-- **Issues**: [GitHub Issues](https://github.com/tu-usuario/servistech-erp/issues)
-
----
+Para soporte técnico o consultas:
+- Email: soporte@servistech.com
+- Teléfono: +58 212-123-4567
 
 ## 📄 Licencia
 
-Copyright © 2024 SERVISTECH. Todos los derechos reservados.
-
-Este software es propiedad de SERVISTECH y no puede ser distribuido sin autorización expresa.
+MIT License - Ver LICENSE para más detalles.
 
 ---
 
-**Versión**: 4.0.0  
-**Última actualización**: Febrero 2024  
-**Autor**: SERVISTECH Development Team
+<p align="center">
+  <strong>SERVISTECH ERP</strong> - Gestión técnica y comercial
+</p>
