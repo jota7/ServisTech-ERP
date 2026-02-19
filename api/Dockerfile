@@ -37,7 +37,7 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY src ./src/
-COPY prisma ./prisma/
+COPY ../prisma ./prisma/
 
 # Cambiamos npm ci por npm install para que no pida el package-lock.json
 RUN npm install
