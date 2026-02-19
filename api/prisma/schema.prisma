@@ -363,4 +363,3 @@ model QAResult {
   createdAt DateTime @default(now())
   @@map("qa_results")
 }
-// Ajuste ServisTech 2026
