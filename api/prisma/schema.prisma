@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== ENUMS ====================
+// --- ENUMS ---
 enum UserRole {
   SUPER_ADMIN
   GERENTE
@@ -47,7 +47,7 @@ enum TransferStatus {
   CANCELLED
 }
 
-// ==================== MODELOS ====================
+// --- MODELOS ---
 
 model User {
   id              String         @id @default(uuid())
@@ -55,12 +55,13 @@ model User {
   email           String         @unique
   password        String
   role            UserRole       @default(ANFITRION)
+  isActive        Boolean        @default(true) // Requerido por authController
+  lastLogin       DateTime?      // Requerido por authController
   storeId         String
   store           Store          @relation(fields: [storeId], references: [id])
   ordersCreated   ServiceOrder[] @relation("CreatedBy")
   ordersAssigned  ServiceOrder[] @relation("AssignedTo")
   createdAt       DateTime       @default(now())
-
   @@map("users")
 }
 
@@ -68,14 +69,14 @@ model Store {
   id            String          @id @default(uuid())
   name          String
   code          String          @unique
+  address       String?         // Requerido por storeController
   users         User[]
   orders        ServiceOrder[]
   parts         PartStock[]
   safeKits      SafeKit[]
-  
+  cashRegisters CashRegister[]  // Requerido por cashRegisterController
   transfersFrom StockTransfer[] @relation("FromStore")
   transfersTo   StockTransfer[] @relation("ToStore")
-
   @@map("stores")
 }
 
@@ -83,21 +84,22 @@ model Customer {
   id         String         @id @default(uuid())
   name       String
   phone      String
+  email      String?        // Requerido por customerController
   documentId String         @unique
   devices    Device[]
   orders     ServiceOrder[]
-
+  createdAt  DateTime       @default(now()) // Requerido por inventoryController
   @@map("customers")
 }
 
 model Device {
   id           String         @id @default(uuid())
   model        String
+  brand        String?        // Requerido por orderController
   serialNumber String         @unique
   customerId   String
   customer     Customer       @relation(fields: [customerId], references: [id])
   orders       ServiceOrder[]
-
   @@map("devices")
 }
 
@@ -106,6 +108,9 @@ model ServiceOrder {
   orderNumber   String       @unique
   status        OrderStatus  @default(TRIAJE)
   priority      Priority     @default(MEDIA)
+  diagnosis     String?      // Requerido por orderController
+  reportedIssue String?      // Requerido por orderController
+  completedAt   DateTime?    // Requerido por dashboardController
   
   customerId    String
   customer      Customer     @relation(fields: [customerId], references: [id])
@@ -119,13 +124,12 @@ model ServiceOrder {
   assignedToId  String?
   assignedTo    User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
 
-  // RELACIÓN 1:1 CORREGIDA
   safeKitId     String?      @unique
   safeKit       SafeKit?     @relation(fields: [safeKitId], references: [id])
 
   partsUsed     PartUsage[]
+  invoices      Invoice[]    // Requerido por dashboardController
   createdAt     DateTime     @default(now())
-
   @@map("service_orders")
 }
 
@@ -133,60 +137,81 @@ model SafeKit {
   id           String        @id @default(uuid())
   code         String        @unique
   storeId      String
-  store         Store        @relation(fields: [storeId], references: [id])
-  
+  store        Store         @relation(fields: [storeId], references: [id])
   currentOrder ServiceOrder?
-
   @@map("safe_kits")
 }
 
 model Part {
-  id        String          @id @default(uuid())
-  sku       String          @unique
-  name      String
-  stock     PartStock[]
-  usages    PartUsage[]
-  transfers StockTransfer[]
-
+  id              String          @id @default(uuid())
+  sku             String          @unique
+  name            String
+  description     String?         // Requerido por inventoryController
+  costPrice       Float           @default(0) // Requerido por inventoryController
+  salePrice       Float           @default(0) // Requerido por inventoryController
+  shippingCost    Float           @default(0)
+  operationalCost Float           @default(0)
+  minStock        Int             @default(5)
+  stock           PartStock[]
+  usages          PartUsage[]
+  transfers       StockTransfer[]
   @@map("parts")
 }
 
 model PartStock {
   id       String @id @default(uuid())
   quantity Int    @default(0)
+  reserved Int    @default(0) // Requerido por orderController
   partId   String
   part     Part   @relation(fields: [partId], references: [id])
   storeId  String
   store    Store  @relation(fields: [storeId], references: [id])
-
   @@unique([partId, storeId])
   @@map("part_stocks")
+}
+
+// --- MODELOS DE FINANZAS (Los que faltaban) ---
+
+model CashRegister {
+  id        String   @id @default(uuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  isOpen    Boolean  @default(true)
+  balance   Float    @default(0)
+  createdAt DateTime @default(now())
+  @@map("cash_registers")
+}
+
+model Invoice {
+  id             String       @id @default(uuid())
+  orderId        String
+  order          ServiceOrder @relation(fields: [orderId], references: [id])
+  amount         Float
+  status         String
+  createdAt      DateTime     @default(now())
+  @@map("invoices")
+}
+
+model PartUsage {
+  id       String       @id @default(uuid())
+  partId   String
+  part     Part         @relation(fields: [partId], references: [id])
+  orderId  String
+  order    ServiceOrder @relation(fields: [orderId], references: [id])
+  quantity Int          @default(1) // Requerido por orderController
+  @@map("part_usages")
 }
 
 model StockTransfer {
   id          String         @id @default(uuid())
   quantity    Int
   status      TransferStatus @default(PENDING)
-  
   partId      String
   part        Part           @relation(fields: [partId], references: [id])
-  
   fromStoreId String
   fromStore   Store          @relation("FromStore", fields: [fromStoreId], references: [id])
-  
   toStoreId   String
   toStore     Store          @relation("ToStore", fields: [toStoreId], references: [id])
-
   createdAt   DateTime       @default(now())
   @@map("stock_transfers")
-}
-
-model PartUsage {
-  id      String       @id @default(uuid())
-  partId  String
-  part    Part         @relation(fields: [partId], references: [id])
-  orderId String
-  order   ServiceOrder @relation(fields: [orderId], references: [id])
-
-  @@map("part_usages")
 }
