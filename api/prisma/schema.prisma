@@ -1,289 +1,396 @@
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
-}
+builder
+RUN npm run build
+7s
+> servistech-api@1.0.0 build
+> prisma generate --schema=./prisma/schema.prisma && tsc
+prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+Please manually install OpenSSL and try installing Prisma again.
+Prisma schema loaded from prisma/schema.prisma
+prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+Please manually install OpenSSL and try installing Prisma again.
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 306ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+src/controllers/authController.ts(123,45): error TS2345: Argument of type '{ where: { id: string; }; include: { store: true; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; }' is not assignable to parameter of type 'SelectSubset<{ where: { id: string; }; include: { store: true; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; }, UserFindUniqueArgs<...>>'.
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+  Type '{ where: { id: string; }; include: { store: true; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; }' is not assignable to type '"Please either choose `select` or `include`."'.
+src/controllers/cashRegisterController.ts(55,7): error TS2561: Object literal may only specify known properties, but 'openingVES' does not exist in type 'Without<CashRegisterCreateInput, CashRegisterUncheckedCreateInput> & CashRegisterUncheckedCreateInput'. Did you mean to write 'openingUSD'?
 
-// --- ENUMS ---
-enum UserRole {
-  SUPER_ADMIN
-  GERENTE
-  ENCARGADA
-  ANFITRION
-  TECNICO
-  QA
-  ALMACEN
-  MENSAJERO
-  CLIENTE
-}
+src/controllers/cashRegisterController.ts(107,7): error TS2561: Object literal may only specify known properties, but 'declaredVES' does not exist in type '(Without<CashRegisterUpdateInput, CashRegisterUncheckedUpdateInput> & CashRegisterUncheckedUpdateInput) | (Without<...> & CashRegisterUpdateInput)'. Did you mean to write 'declaredUSD'?
 
-enum OrderStatus {
-  TRIAJE
-  DIAGNOSTICO
-  ESPERA_REPUESTO
-  MICRO_SOLDADURA
-  QA
-  LISTO
-  ENTREGADO
-  GARANTIA
-}
+src/controllers/cashRegisterController.ts(141,7): error TS2353: Object literal may only specify known properties, and 'registerId' does not exist in type '(Without<PettyCashExpenseCreateInput, PettyCashExpenseUncheckedCreateInput> & PettyCashExpenseUncheckedCreateInput) | (Without<...> & PettyCashExpenseCreateInput)'.
 
-enum Priority {
-  BAJA
-  MEDIA
-  ALTA
-  URGENTE
-  GARANTIA
-}
+src/controllers/cashRegisterController.ts(193,18): error TS2353: Object literal may only specify known properties, and 'openedAt' does not exist in type 'CashRegisterOrderByWithRelationInput | CashRegisterOrderByWithRelationInput[]'.
 
-enum TransferStatus {
-  PENDING
-  IN_TRANSIT
-  RECEIVED
-  CANCELLED
-}
+src/controllers/cashRegisterController.ts(226,9): error TS2353: Object literal may only specify known properties, and 'openedAt' does not exist in type 'CashRegisterWhereInput'.
 
-// --- MODELOS ---
+src/controllers/cashRegisterController.ts(232,9): error TS2561: Object literal may only specify known properties, but 'openingVES' does not exist in type 'CashRegisterSumAggregateInputType'. Did you mean to write 'openingUSD'?
 
-model User {
-  id              String         @id @default(uuid())
-  name            String
-  email           String         @unique
-  password        String
-  role            UserRole       @default(ANFITRION)
-  isActive        Boolean        @default(true)
-  avatar          String?        // <--- REQUERIDO POR AUTH
-  lastLogin       DateTime?
-  storeId         String
-  store           Store          @relation(fields: [storeId], references: [id])
-  ordersCreated   ServiceOrder[] @relation("CreatedBy")
-  ordersAssigned  ServiceOrder[] @relation("AssignedTo")
-  cashRegisters   CashRegister[] @relation("OpenedBy")
-  createdAt       DateTime       @default(now())
-  @@map("users")
-}
+src/controllers/commissionController.ts(9,24): error TS2305: Module '"@prisma/client"' has no exported member 'CommissionStatus'.
 
-model Store {
-  id              String          @id @default(uuid())
-  name            String
-  code            String          @unique
-  address         String?
-  phone           String?         // <--- REQUERIDO POR STORE
-  users           User[]
-  orders          ServiceOrder[]
-  parts           PartStock[]
-  safeKits        SafeKit[]
-  cashRegisters   CashRegister[]
-  fixedExpenses   FixedExpense[]
-  transfersFrom   StockTransfer[] @relation("FromStore")
-  transfersTo     StockTransfer[] @relation("ToStore")
-  @@map("stores")
-}
+src/controllers/commissionController.ts(9,42): error TS2305: Module '"@prisma/client"' has no exported member 'DebitReason'.
 
-model Customer {
-  id         String         @id @default(uuid())
-  name       String
-  phone      String
-  email      String?
-  address    String?        // <--- REQUERIDO POR CUSTOMER
-  documentId String         @unique
-  devices    Device[]
-  orders     ServiceOrder[]
-  createdAt  DateTime       @default(now())
-  @@map("customers")
-}
+src/controllers/commissionController.ts(29,9): error TS2561: Object literal may only specify known properties, but 'invoice' does not exist in type 'ServiceOrderInclude<DefaultArgs>'. Did you mean to write 'invoices'?
 
-model Device {
-  id           String         @id @default(uuid())
-  model        String
-  brand        String?
-  type         String?        // <--- REQUERIDO POR DELIVERY/ORDER
-  serialNumber String         @unique
-  customerId   String
-  customer     Customer       @relation(fields: [customerId], references: [id])
-  orders       ServiceOrder[]
-  @@map("devices")
-}
+src/controllers/commissionController.ts(36,26): error TS2339: Property 'technician' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-model ServiceOrder {
-  id            String       @id @default(uuid())
-  orderNumber   String       @unique
-  status        OrderStatus  @default(TRIAJE)
-  priority      Priority     @default(MEDIA)
-  diagnosis     String?
-  solution      String?      // <--- REQUERIDO POR ORDER
-  reportedIssue String?
-  estimatedCost Float?       // <--- REQUERIDO POR DELIVERY
-  finalCost     Float?       // <--- REQUERIDO POR CUSTOMER/DASHBOARD
-  completedAt   DateTime?
-  
-  customerId    String
-  customer      Customer     @relation(fields: [customerId], references: [id])
-  deviceId      String
-  device        Device       @relation(fields: [deviceId], references: [id])
-  storeId       String
-  store         Store        @relation(fields: [storeId], references: [id])
-  
-  createdById   String
-  createdBy     User         @relation("CreatedBy", fields: [createdById], references: [id])
-  assignedToId  String?
-  assignedTo    User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+src/controllers/commissionController.ts(39,31): error TS2339: Property 'grossProfit' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-  safeKitId     String?      @unique
-  safeKit       SafeKit?     @relation(fields: [safeKitId], references: [id])
+src/controllers/commissionController.ts(42,34): error TS2339: Property 'technician' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-  partsUsed     PartUsage[]
-  invoices      Invoice[]
-  deliveryRequests DeliveryRequest[]
-  timeEntries   TimeEntry[]
-  checklist     Json?        // <--- REQUERIDO POR ORDER
-  createdAt     DateTime     @default(now())
-  @@map("service_orders")
-}
+src/controllers/commissionController.ts(43,28): error TS2339: Property 'technician' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-model Part {
-  id              String          @id @default(uuid())
-  sku             String          @unique
-  name            String
-  category        String?         // <--- REQUERIDO POR INVENTORY
-  description     String?
-  costPrice       Float           @default(0)
-  salePrice       Float           @default(0)
-  shippingCost    Float           @default(0)
-  operationalCost Float           @default(0)
-  minStock        Int             @default(5)
-  stock           PartStock[]
-  usages          PartUsage[]
-  transfers       StockTransfer[]
-  @@map("parts")
-}
+src/controllers/commissionController.ts(44,33): error TS2339: Property 'technician' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-model PartStock {
-  id       String @id @default(uuid())
-  quantity Int    @default(0)
-  reserved Int    @default(0)
-  partId   String
-  part     Part   @relation(fields: [partId], references: [id])
-  storeId  String
-  store    Store  @relation(fields: [storeId], references: [id])
-  @@unique([partId, storeId])
-  @@map("part_stocks")
-}
+src/controllers/commissionController.ts(50,15): error TS2339: Property 'technician' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-model CashRegister {
-  id          String   @id @default(uuid())
-  storeId     String
-  store       Store    @relation(fields: [storeId], references: [id])
-  status      String   @default("OPEN") // <--- REQUERIDO POR CASH
-  isOpen      Boolean  @default(true)
-  openingUSD  Float    @default(0)
-  systemUSD   Float    @default(0)
-  systemVES   Float    @default(0)
-  declaredUSD Float?
-  balance     Float    @default(0)
-  openedById  String
-  openedBy    User     @relation("OpenedBy", fields: [openedById], references: [id])
-  expenses    PettyCashExpense[]
-  createdAt   DateTime @default(now())
-  @@map("cash_registers")
-}
+src/controllers/commissionController.ts(53,22): error TS2339: Property 'technician' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-model Invoice {
-  id             String       @id @default(uuid())
-  invoiceNumber  String?      @unique
-  orderId        String
-  order          ServiceOrder @relation(fields: [orderId], references: [id])
-  amount         Float
-  total          Float?       // <--- REQUERIDO POR DASHBOARD/STORE
-  paidTotal      Float?
-  igtfAmount     Float?
-  status         String
-  payments       Payment[]
-  createdAt      DateTime     @default(now())
-  @@map("invoices")
-}
+src/controllers/commissionController.ts(58,36): error TS2339: Property 'invoice' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
 
-model Payment {
-  id        String   @id @default(uuid())
-  invoiceId String
-  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
-  amount    Float
-  createdAt DateTime @default(now())
-  @@map("payments")
-}
+src/controllers/commissionController.ts(75,18): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model PartUsage {
-  id        String       @id @default(uuid())
-  partId    String
-  part      Part         @relation(fields: [partId], references: [id])
-  orderId   String
-  order     ServiceOrder @relation(fields: [orderId], references: [id])
-  quantity  Int          @default(1)
-  costPrice Float?
-  @@map("part_usages")
-}
+src/controllers/commissionController.ts(119,14): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model PettyCashExpense {
-  id             String       @id @default(uuid())
-  cashRegisterId String
-  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id])
-  amount         Float
-  description    String
-  createdAt      DateTime     @default(now())
-  @@map("petty_cash_expenses")
-}
+src/controllers/commissionController.ts(138,14): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model DeliveryRequest {
-  id        String       @id @default(uuid())
-  orderId   String
-  order     ServiceOrder @relation(fields: [orderId], references: [id])
-  status    String
-  createdAt DateTime     @default(now())
-  @@map("delivery_requests")
-}
+src/controllers/commissionController.ts(171,34): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model TimeEntry {
-  id        String       @id @default(uuid())
-  orderId   String
-  order     ServiceOrder @relation(fields: [orderId], references: [id])
-  createdAt DateTime     @default(now())
-  @@map("time_entries")
-}
+src/controllers/commissionController.ts(184,35): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model FixedExpense {
-  id        String   @id @default(uuid())
-  storeId   String
-  store     Store    @relation(fields: [storeId], references: [id])
-  amount    Float
-  category  String
-  createdAt DateTime @default(now())
-  @@map("fixed_expenses")
-}
+src/controllers/commissionController.ts(216,33): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model StockTransfer {
-  id          String         @id @default(uuid())
-  quantity    Int
-  status      TransferStatus @default(PENDING)
-  partId      String
-  part        Part           @relation(fields: [partId], references: [id])
-  fromStoreId String
-  fromStore   Store          @relation("FromStore", fields: [fromStoreId], references: [id])
-  toStoreId   String
-  toStore     Store          @relation("ToStore", fields: [toStoreId], references: [id])
-  requestedById String?
-  createdAt   DateTime       @default(now())
-  @@map("stock_transfers")
-}
+src/controllers/commissionController.ts(265,37): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 
-model SafeKit {
-  id           String        @id @default(uuid())
-  code         String        @unique
-  storeId      String
-  store        Store         @relation(fields: [storeId], references: [id])
-  currentOrder ServiceOrder?
-  @@map("safe_kits")
-}
+src/controllers/commissionController.ts(284,32): error TS2339: Property 'technicianDebit' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/commissionController.ts(298,44): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/commissionController.ts(338,33): error TS2339: Property 'technicianDebit' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/commissionController.ts(377,38): error TS2339: Property 'commission' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/commissionController.ts(391,30): error TS7006: Parameter 'item' implicitly has an 'any' type.
+
+src/controllers/commissionController.ts(412,38): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+
+src/controllers/commissionController.ts(412,43): error TS7006: Parameter 'r' implicitly has an 'any' type.
+
+src/controllers/commissionController.ts(413,37): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+
+src/controllers/commissionController.ts(413,42): error TS7006: Parameter 'r' implicitly has an 'any' type.
+
+src/controllers/dashboardController.ts(117,12): error TS2339: Property 'qAResult' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/dashboardController.ts(132,25): error TS2322: Type 'FieldRef<"Part", "Int">' is not assignable to type 'number | FieldRef<"PartStock", "Int"> | undefined'.
+
+  Type 'FieldRef<"Part", "Int">' is not assignable to type 'FieldRef<"PartStock", "Int">'.
+    Type '"Part"' is not assignable to type '"PartStock"'.
+src/controllers/dashboardController.ts(169,42): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+
+src/controllers/dashboardController.ts(169,47): error TS7006: Parameter 'r' implicitly has an 'any' type.
+
+src/controllers/dashboardController.ts(170,41): error TS7006: Parameter 'r' implicitly has an 'any' type.
+
+src/controllers/dashboardController.ts(258,11): error TS2353: Object literal may only specify known properties, and 'storeId' does not exist in type 'InvoiceWhereInput'.
+
+src/controllers/dashboardController.ts(270,21): error TS18048: 'result._sum' is possibly 'undefined'.
+
+src/controllers/dashboardController.ts(378,9): error TS2353: Object literal may only specify known properties, and 'storeId' does not exist in type 'InvoiceWhereInput'.
+
+src/controllers/dashboardController.ts(383,9): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+
+src/controllers/dashboardController.ts(396,20): error TS18047: 'o.reportedIssue' is possibly 'null'.
+
+src/controllers/dashboardController.ts(405,22): error TS2339: Property 'customer' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; amount: number; total: number | null; invoiceNumber: string | null; paidTotal: number | null; igtfAmount: number | null; }'.
+
+src/controllers/deliveryController.ts(7,24): error TS2305: Module '"@prisma/client"' has no exported member 'DeviceType'.
+
+src/controllers/deliveryController.ts(7,36): error TS2305: Module '"@prisma/client"' has no exported member 'LockType'.
+
+src/controllers/deliveryController.ts(88,9): error TS2353: Object literal may only specify known properties, and 'customerId' does not exist in type '(Without<DeliveryRequestCreateInput, DeliveryRequestUncheckedCreateInput> & DeliveryRequestUncheckedCreateInput) | (Without<...> & DeliveryRequestCreateInput)'.
+
+src/controllers/deliveryController.ts(106,9): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'DeliveryRequestInclude<DefaultArgs>'.
+
+src/controllers/deliveryController.ts(145,11): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'DeliveryRequestInclude<DefaultArgs>'.
+
+src/controllers/deliveryController.ts(149,20): error TS2353: Object literal may only specify known properties, and 'requestedAt' does not exist in type 'DeliveryRequestOrderByWithRelationInput | DeliveryRequestOrderByWithRelationInput[]'.
+
+src/controllers/deliveryController.ts(182,9): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'DeliveryRequestInclude<DefaultArgs>'.
+
+src/controllers/deliveryController.ts(209,9): error TS2353: Object literal may only specify known properties, and 'messengerId' does not exist in type '(Without<DeliveryRequestUpdateInput, DeliveryRequestUncheckedUpdateInput> & DeliveryRequestUncheckedUpdateInput) | (Without<...> & DeliveryRequestUpdateInput)'.
+
+src/controllers/deliveryController.ts(280,31): error TS2339: Property 'deviceType' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(282,32): error TS2339: Property 'deviceModel' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(283,39): error TS2339: Property 'serialNumber' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(284,9): error TS2353: Object literal may only specify known properties, and 'imei' does not exist in type '(Without<DeviceCreateInput, DeviceUncheckedCreateInput> & DeviceUncheckedCreateInput) | (Without<...> & DeviceCreateInput)'.
+
+src/controllers/deliveryController.ts(284,31): error TS2339: Property 'imei' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(285,32): error TS2339: Property 'deviceColor' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(286,37): error TS2339: Property 'customerId' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(287,35): error TS2339: Property 'lockType' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(288,34): error TS2339: Property 'pattern' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(289,30): error TS2339: Property 'pin' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(290,35): error TS2339: Property 'password' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(302,37): error TS2339: Property 'customerId' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(306,54): error TS2339: Property 'issue' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(311,9): error TS2353: Object literal may only specify known properties, and 'paidAmount' does not exist in type 'Without<ServiceOrderCreateInput, ServiceOrderUncheckedCreateInput> & ServiceOrderUncheckedCreateInput'.
+
+src/controllers/deliveryController.ts(346,9): error TS2353: Object literal may only specify known properties, and 'messengerId' does not exist in type 'DeliveryRequestWhereInput'.
+
+src/controllers/deliveryController.ts(350,9): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'DeliveryRequestInclude<DefaultArgs>'.
+
+src/controllers/deliveryController.ts(358,18): error TS2353: Object literal may only specify known properties, and 'scheduledDate' does not exist in type 'DeliveryRequestOrderByWithRelationInput | DeliveryRequestOrderByWithRelationInput[]'.
+
+src/controllers/deliveryController.ts(364,23): error TS2339: Property 'customer' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(365,24): error TS2339: Property 'customer' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(366,18): error TS2339: Property 'address' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(367,19): error TS2339: Property 'latitude' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(368,20): error TS2339: Property 'longitude' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(369,22): error TS2339: Property 'deviceModel' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(370,16): error TS2339: Property 'issue' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(372,24): error TS2339: Property 'scheduledDate' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(373,17): error TS2339: Property 'photos' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(396,9): error TS2353: Object literal may only specify known properties, and 'scheduledDate' does not exist in type 'DeliveryRequestSelect<DefaultArgs>'.
+
+src/controllers/deliveryController.ts(411,29): error TS2339: Property 'customer' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(412,28): error TS2339: Property 'deviceModel' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(414,30): error TS2339: Property 'scheduledDate' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/deliveryController.ts(415,28): error TS2339: Property 'completedAt' does not exist on type '{ id: string; createdAt: Date; status: string; orderId: string; }'.
+
+src/controllers/inventoryController.ts(47,18): error TS2353: Object literal may only specify known properties, and 'createdAt' does not exist in type 'PartOrderByWithRelationInput | PartOrderByWithRelationInput[]'.
+
+src/controllers/inventoryController.ts(56,12): error TS2339: Property 'stock' does not exist on type '{ id: string; name: string; sku: string; description: string | null; category: string | null; costPrice: number; salePrice: number; shippingCost: number; operationalCost: number; minStock: number; }'.
+
+src/controllers/inventoryController.ts(56,24): error TS7006: Parameter 's' implicitly has an 'any' type.
+
+src/controllers/inventoryController.ts(93,20): error TS2353: Object literal may only specify known properties, and 'createdAt' does not exist in type 'PartUsageOrderByWithRelationInput | PartUsageOrderByWithRelationInput[]'.
+
+src/controllers/inventoryController.ts(153,7): error TS2353: Object literal may only specify known properties, and 'compatibleModels' does not exist in type '(Without<PartCreateInput, PartUncheckedCreateInput> & PartUncheckedCreateInput) | (Without<...> & PartCreateInput)'.
+
+src/controllers/inventoryController.ts(256,7): error TS2561: Object literal may only specify known properties, but 'requestedBy' does not exist in type '(Without<StockTransferCreateInput, StockTransferUncheckedCreateInput> & StockTransferUncheckedCreateInput) | (Without<...> & StockTransferCreateInput)'. Did you mean to write 'requestedById'?
+
+src/controllers/inventoryController.ts(272,45): error TS2339: Property 'part' does not exist on type '{ id: string; createdAt: Date; status: TransferStatus; quantity: number; partId: string; fromStoreId: string; toStoreId: string; requestedById: string | null; }'.
+
+src/controllers/inventoryController.ts(272,72): error TS2551: Property 'fromStore' does not exist on type '{ id: string; createdAt: Date; status: TransferStatus; quantity: number; partId: string; fromStoreId: string; toStoreId: string; requestedById: string | null; }'. Did you mean 'fromStoreId'?
+
+src/controllers/inventoryController.ts(272,103): error TS2551: Property 'toStore' does not exist on type '{ id: string; createdAt: Date; status: TransferStatus; quantity: number; partId: string; fromStoreId: string; toStoreId: string; requestedById: string | null; }'. Did you mean 'toStoreId'?
+
+src/controllers/invoiceController.ts(61,9): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+
+src/controllers/invoiceController.ts(91,7): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+
+src/controllers/invoiceController.ts(135,7): error TS2353: Object literal may only specify known properties, and 'customerId' does not exist in type '(Without<InvoiceCreateInput, InvoiceUncheckedCreateInput> & InvoiceUncheckedCreateInput) | (Without<...> & InvoiceCreateInput)'.
+
+src/controllers/invoiceController.ts(157,7): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+
+src/controllers/invoiceController.ts(206,7): error TS2353: Object literal may only specify known properties, and 'method' does not exist in type 'Without<PaymentCreateInput, PaymentUncheckedCreateInput> & PaymentUncheckedCreateInput'.
+
+src/controllers/invoiceController.ts(225,7): error TS2353: Object literal may only specify known properties, and 'paidAt' does not exist in type '(Without<InvoiceUpdateInput, InvoiceUncheckedUpdateInput> & InvoiceUncheckedUpdateInput) | (Without<...> & InvoiceUpdateInput)'.
+
+src/controllers/invoiceController.ts(301,9): error TS2353: Object literal may only specify known properties, and 'customer' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+
+src/controllers/invoiceController.ts(308,7): error TS2322: Type '"method"[]' is not assignable to type 'PaymentScalarFieldEnum | PaymentScalarFieldEnum[]'.
+
+  Type '"method"[]' is not assignable to type 'PaymentScalarFieldEnum[]'.
+    Type '"method"' is not assignable to type 'PaymentScalarFieldEnum'.
+src/controllers/invoiceController.ts(315,11): error TS2353: Object literal may only specify known properties, and 'storeId' does not exist in type 'Without<InvoiceRelationFilter, InvoiceWhereInput> & InvoiceWhereInput'.
+
+src/controllers/orderController.ts(109,11): error TS2353: Object literal may only specify known properties, and 'technician' does not exist in type 'TimeEntryInclude<DefaultArgs>'.
+
+src/controllers/orderController.ts(265,9): error TS2353: Object literal may only specify known properties, and 'salePrice' does not exist in type 'Without<PartUsageCreateInput, PartUsageUncheckedCreateInput> & PartUsageUncheckedCreateInput'.
+
+src/controllers/orderController.ts(300,7): error TS2353: Object literal may only specify known properties, and 'technicianId' does not exist in type 'Without<TimeEntryCreateInput, TimeEntryUncheckedCreateInput> & TimeEntryUncheckedCreateInput'.
+
+src/controllers/orderController.ts(317,7): error TS2353: Object literal may only specify known properties, and 'endTime' does not exist in type 'TimeEntryWhereInput'.
+
+src/controllers/orderController.ts(326,62): error TS2339: Property 'startTime' does not exist on type '{ id: string; createdAt: Date; orderId: string; }'.
+
+src/controllers/orderController.ts(331,7): error TS2353: Object literal may only specify known properties, and 'endTime' does not exist in type '(Without<TimeEntryUpdateInput, TimeEntryUncheckedUpdateInput> & TimeEntryUncheckedUpdateInput) | (Without<...> & TimeEntryUpdateInput)'.
+
+src/controllers/pettyCashController.ts(61,9): error TS2353: Object literal may only specify known properties, and 'currency' does not exist in type '(Without<PettyCashExpenseCreateInput, PettyCashExpenseUncheckedCreateInput> & PettyCashExpenseUncheckedCreateInput) | (Without<...> & PettyCashExpenseCreateInput)'.
+
+src/controllers/pettyCashController.ts(119,9): error TS2559: Type '{ category?: string | undefined; registerId: string; }' has no properties in common with type 'PettyCashExpenseWhereInput'.
+
+src/controllers/pettyCashController.ts(124,39): error TS2559: Type '{ category?: string | undefined; registerId: string; }' has no properties in common with type 'PettyCashExpenseWhereInput'.
+
+src/controllers/pettyCashController.ts(129,16): error TS2353: Object literal may only specify known properties, and 'registerId' does not exist in type 'PettyCashExpenseWhereInput'.
+
+src/controllers/pettyCashController.ts(137,24): error TS18048: 'totals._count' is possibly 'undefined'.
+
+src/controllers/pettyCashController.ts(137,38): error TS2339: Property 'id' does not exist on type 'true | { id?: number | undefined; cashRegisterId?: number | undefined; amount?: number | undefined; description?: number | undefined; createdAt?: number | undefined; _all?: number | undefined; }'.
+
+  Property 'id' does not exist on type 'true'.
+src/controllers/pettyCashController.ts(138,22): error TS18048: 'totals._sum' is possibly 'undefined'.
+
+src/controllers/pettyCashController.ts(174,9): error TS2353: Object literal may only specify known properties, and 'register' does not exist in type 'PettyCashExpenseInclude<DefaultArgs>'.
+
+src/controllers/pettyCashController.ts(186,7): error TS2322: Type '"category"[]' is not assignable to type 'PettyCashExpenseScalarFieldEnum | PettyCashExpenseScalarFieldEnum[]'.
+
+  Type '"category"[]' is not assignable to type 'PettyCashExpenseScalarFieldEnum[]'.
+    Type '"category"' is not assignable to type 'PettyCashExpenseScalarFieldEnum'.
+src/controllers/pettyCashController.ts(255,18): error TS2353: Object literal may only specify known properties, and 'register' does not exist in type 'PettyCashExpenseInclude<DefaultArgs>'.
+
+src/controllers/pettyCashController.ts(264,31): error TS2339: Property 'createdBy' does not exist on type '{ id: string; createdAt: Date; description: string; amount: number; cashRegisterId: string; }'.
+
+src/controllers/pettyCashController.ts(265,31): error TS2339: Property 'register' does not exist on type '{ id: string; createdAt: Date; description: string; amount: number; cashRegisterId: string; }'.
+
+src/controllers/pettyCashController.ts(272,17): error TS2339: Property 'register' does not exist on type '{ id: string; createdAt: Date; description: string; amount: number; cashRegisterId: string; }'.
+
+src/controllers/storeController.ts(43,11): error TS2353: Object literal may only specify known properties, and 'courtesyDevices' does not exist in type 'StoreCountOutputTypeSelect<DefaultArgs>'.
+
+src/controllers/storeController.ts(75,7): error TS2353: Object literal may only specify known properties, and 'email' does not exist in type '(Without<StoreCreateInput, StoreUncheckedCreateInput> & StoreUncheckedCreateInput) | (Without<...> & StoreCreateInput)'.
+
+src/controllers/storeController.ts(188,9): error TS2353: Object literal may only specify known properties, and 'storeId' does not exist in type 'InvoiceWhereInput'.
+
+src/controllers/storeController.ts(225,20): error TS18048: 'invoicesTotal._sum' is possibly 'undefined'.
+
+src/controllers/targetController.ts(8,24): error TS2305: Module '"@prisma/client"' has no exported member 'ExpenseCategory'.
+
+src/controllers/targetController.ts(35,9): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'Without<FixedExpenseCreateInput, FixedExpenseUncheckedCreateInput> & FixedExpenseUncheckedCreateInput'.
+
+src/controllers/targetController.ts(71,22): error TS2339: Property 'isActive' does not exist on type '{ id: string; storeId: string; createdAt: Date; category: string; amount: number; }'.
+
+src/controllers/targetController.ts(106,9): error TS2353: Object literal may only specify known properties, and 'isActive' does not exist in type 'FixedExpenseWhereInput'.
+
+src/controllers/targetController.ts(128,9): error TS2353: Object literal may only specify known properties, and 'register' does not exist in type 'PettyCashExpenseWhereInput'.
+
+src/controllers/targetController.ts(135,35): error TS18048: 'dailyPettyCash._sum' is possibly 'undefined'.
+
+src/controllers/targetController.ts(144,9): error TS2353: Object literal may only specify known properties, and 'storeId' does not exist in type 'InvoiceWhereInput'.
+
+src/controllers/targetController.ts(150,32): error TS18048: 'dailySales._sum' is possibly 'undefined'.
+
+src/controllers/targetController.ts(160,38): error TS2339: Property 'dailyTarget' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/targetController.ts(200,17): error TS2339: Property 'name' does not exist on type '{ id: string; storeId: string; createdAt: Date; category: string; amount: number; }'.
+
+src/controllers/targetController.ts(229,34): error TS2339: Property 'dailyTarget' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/targetController.ts(242,36): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+
+src/controllers/targetController.ts(242,41): error TS7006: Parameter 't' implicitly has an 'any' type.
+
+src/controllers/targetController.ts(243,36): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+
+src/controllers/targetController.ts(243,41): error TS7006: Parameter 't' implicitly has an 'any' type.
+
+src/controllers/targetController.ts(244,31): error TS7006: Parameter 't' implicitly has an 'any' type.
+
+src/controllers/targetController.ts(263,30): error TS7006: Parameter 't' implicitly has an 'any' type.
+
+src/controllers/targetController.ts(303,9): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type '(Without<FixedExpenseUpdateInput, FixedExpenseUncheckedUpdateInput> & FixedExpenseUncheckedUpdateInput) | (Without<...> & FixedExpenseUpdateInput)'.
+
+src/controllers/userController.ts(29,26): error TS2345: Argument of type '{ where: any; skip: number; take: number; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; orderBy: { ...; }; }' is not assignable to parameter of type 'SelectSubset<{ where: any; skip: number; take: number; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; orderBy: { ...; }; }, UserFindManyArg...'.
+
+  Type '{ where: any; skip: number; take: number; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; orderBy: { ...; }; }' is not assignable to type '"Please either choose `select` or `include`."'.
+src/controllers/userController.ts(67,45): error TS2345: Argument of type '{ where: { id: string; }; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; }' is not assignable to parameter of type 'SelectSubset<{ where: { id: string; }; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; }, UserFindUniqueArgs<...>>'.
+
+  Type '{ where: { id: string; }; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; avatar: true; storeId: true; store: true; createdAt: true; lastLogin: true; }; }' is not assignable to type '"Please either choose `select` or `include`."'.
+src/controllers/userController.ts(111,41): error TS2345: Argument of type '{ data: { name: any; email: any; password: string; role: any; storeId: any; }; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; storeId: true; store: true; createdAt: true; }; }' is not assignable to parameter of type 'SelectSubset<{ data: { name: any; email: any; password: string; role: any; storeId: any; }; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; storeId: true; store: true; createdAt: true; }; }, UserCreateArgs<...>>'.
+
+  Type '{ data: { name: any; email: any; password: string; role: any; storeId: any; }; include: { store: { select: { id: true; name: true; code: true; }; }; }; select: { id: true; name: true; email: true; role: true; isActive: true; storeId: true; store: true; createdAt: true; }; }' is not assignable to type '"Please either choose `select` or `include`."'.
+src/controllers/userController.ts(188,7): error TS2353: Object literal may only specify known properties, and 'updatedAt' does not exist in type 'UserSelect<DefaultArgs>'.
+
+src/controllers/warrantyController.ts(7,24): error TS2305: Module '"@prisma/client"' has no exported member 'WarrantyStatus'.
+
+src/controllers/warrantyController.ts(7,40): error TS2305: Module '"@prisma/client"' has no exported member 'WarrantyCause'.
+
+src/controllers/warrantyController.ts(32,18): error TS2353: Object literal may only specify known properties, and 'warranty' does not exist in type 'ServiceOrderInclude<DefaultArgs>'.
+
+src/controllers/warrantyController.ts(44,23): error TS2339: Property 'warranty' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
+
+src/controllers/warrantyController.ts(47,35): error TS2339: Property 'warranty' does not exist on type '{ id: string; storeId: string; createdAt: Date; status: OrderStatus; customerId: string; deviceId: string; reportedIssue: string | null; priority: Priority; ... 9 more ...; checklist: JsonValue; }'.
+
+src/controllers/warrantyController.ts(52,40): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(58,35): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(118,14): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(136,14): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(162,35): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(203,35): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(220,42): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(267,32): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(275,37): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/controllers/warrantyController.ts(302,37): error TS2339: Property 'warrantyClaim' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/middleware/auditLogger.ts(70,18): error TS2339: Property 'auditLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/routes/bcvRoutes.ts(27,30): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/routes/bcvRoutes.ts(44,32): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/bcvScraper.ts(21,9): error TS2322: Type '"new"' is not assignable to type 'boolean | "shell" | undefined'.
+
+src/services/bcvScraper.ts(89,20): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/bcvScraper.ts(105,39): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/rateService.ts(35,9): error TS2322: Type '"new"' is not assignable to type 'boolean | "shell" | undefined'.
+
+src/services/rateService.ts(107,39): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/rateService.ts(112,24): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/rateService.ts(122,20): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/rateService.ts(140,39): error TS2339: Property 'bCVRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/rateService.ts(173,36): error TS18046: 'data' is of type 'unknown'.
+
+src/services/rateService.ts(217,20): error TS2339: Property 'binanceRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/services/rateService.ts(233,39): error TS2339: Property 'binanceRate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+src/utils/response.ts(48,6): error TS2352: Conversion of type 'ApiResponse<unknown>' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+
+  Index signature for type 'string' is missing in type 'ApiResponse<unknown>'.
+
+production
+COPY --from=dependencies /app/node_modules ./node_modules
+1s
+
+production
+COPY --from=dependencies /app/package*.json ./
+117ms
+Dockerfile:49
+-------------------
+47 |
+48 |     # Compilar TypeScript
+49 | >>> RUN npm run build
+50 |
+51 |     # ============================================
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
