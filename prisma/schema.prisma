@@ -117,14 +117,14 @@ model User {
 }
 
 model Store {
-  id              String     @id @default(uuid())
+  id              String         @id @default(uuid())
   name            String
-  code            String     @unique
+  code            String         @unique
   address         String
   phone           String
   email           String
   logo            String?
-  isActive        Boolean    @default(true)
+  isActive        Boolean        @default(true)
   
   // Fiscal Data
   rif             String?
@@ -139,9 +139,13 @@ model Store {
   safeKits        SafeKit[]
   courtesyDevices CourtesyDevice[]
   invoices        Invoice[]
+
+  // Inverse relations for transfers
+  transfersFrom   StockTransfer[] @relation("FromTransfer")
+  transfersTo     StockTransfer[] @relation("ToTransfer")
   
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   
   @@map("stores")
 }
@@ -179,7 +183,7 @@ model Customer {
 }
 
 model Device {
-  id            String       @id @default(uuid())
+  id            String         @id @default(uuid())
   type          DeviceType
   brand         DeviceBrand
   model         String
@@ -191,34 +195,34 @@ model Device {
   
   // Relations
   customerId    String
-  customer      Customer     @relation(fields: [customerId], references: [id])
+  customer      Customer       @relation(fields: [customerId], references: [id])
   orders        ServiceOrder[]
   
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   
   @@map("devices")
 }
 
 model ServiceOrder {
-  id              String       @id @default(uuid())
-  orderNumber     String       @unique
-  status          OrderStatus  @default(TRIAJE)
-  priority        Priority     @default(MEDIA)
+  id                String       @id @default(uuid())
+  orderNumber       String       @unique
+  status            OrderStatus  @default(TRIAJE)
+  priority          Priority     @default(MEDIA)
   
   // Reception
-  reportedIssue   String
-  termsAccepted   Boolean      @default(false)
+  reportedIssue     String
+  termsAccepted     Boolean      @default(false)
   customerSignature String?
   
   // Technical
-  diagnosis       String?
-  solution        String?
+  diagnosis         String?
+  solution          String?
   
   // Financial
-  estimatedCost   Decimal      @default(0) @db.Decimal(10, 2)
-  finalCost       Decimal      @default(0) @db.Decimal(10, 2)
-  paidAmount      Decimal      @default(0) @db.Decimal(10, 2)
+  estimatedCost     Decimal      @default(0) @db.Decimal(10, 2)
+  finalCost         Decimal      @default(0) @db.Decimal(10, 2)
+  paidAmount        Decimal      @default(0) @db.Decimal(10, 2)
   
   // Relations
   customerId      String
@@ -228,10 +232,10 @@ model ServiceOrder {
   storeId         String
   store           Store        @relation(fields: [storeId], references: [id])
   
-  createdById     String
-  createdBy       User         @relation("CreatedBy", fields: [createdById], references: [id])
-  assignedToId    String?
-  assignedTo      User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdById      String
+  createdBy        User         @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedToId     String?
+  assignedTo       User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
   
   // Related data
   checklist       ChecklistItem[]
@@ -243,8 +247,7 @@ model ServiceOrder {
   invoice         Invoice?
   
   // Logistics
-  safeKitId       String?
-  safeKit         SafeKit?      @relation(fields: [safeKitId], references: [id])
+  safeKit         SafeKit?
   
   // Timestamps
   createdAt       DateTime      @default(now())
@@ -306,8 +309,7 @@ model Part {
   
   // Relations
   stock             PartStock[]
-  transfersFrom     StockTransfer[] @relation("FromTransfer")
-  transfersTo       StockTransfer[] @relation("ToTransfer")
+  transfers         StockTransfer[]
   usages            PartUsage[]
   
   createdAt         DateTime     @default(now())
@@ -520,105 +522,4 @@ model Payment {
   timestamp   DateTime      @default(now())
   
   invoiceId   String
-  invoice     Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  
-  @@map("payments")
-}
-
-model CashRegister {
-  id              String          @id @default(uuid())
-  
-  // Opening amounts
-  openingUSD      Decimal         @db.Decimal(10, 2)
-  openingVES      Decimal         @db.Decimal(10, 2)
-  
-  // Declared amounts (blind close)
-  declaredUSD     Decimal?        @db.Decimal(10, 2)
-  declaredVES     Decimal?        @db.Decimal(10, 2)
-  
-  // System calculated
-  systemUSD       Decimal         @db.Decimal(10, 2)
-  systemVES       Decimal         @db.Decimal(10, 2)
-  
-  // Discrepancy
-  discrepancyUSD  Decimal?        @db.Decimal(10, 2)
-  discrepancyVES  Decimal?        @db.Decimal(10, 2)
-  
-  status          RegisterStatus
-  
-  // Relations
-  storeId         String
-  store           Store           @relation(fields: [storeId], references: [id])
-  openedById      String
-  openedBy        User            @relation(fields: [openedById], references: [id])
-  closedById      String?
-  
-  expenses        PettyCashExpense[]
-  
-  openedAt        DateTime        @default(now())
-  closedAt        DateTime?
-  
-  @@map("cash_registers")
-}
-
-model PettyCashExpense {
-  id          String       @id @default(uuid())
-  description String
-  amount      Decimal      @db.Decimal(10, 2)
-  currency    String       // 'USD' | 'VES'
-  category    String
-  receiptPhoto String?
-  
-  registerId  String
-  register    CashRegister @relation(fields: [registerId], references: [id], onDelete: Cascade)
-  createdBy   String
-  createdAt   DateTime     @default(now())
-  
-  @@map("petty_cash_expenses")
-}
-
-model AuditLog {
-  id          String   @id @default(uuid())
-  action      String
-  entityType  String
-  entityId    String
-  oldValue    Json?
-  newValue    Json?
-  ipAddress   String
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  
-  timestamp   DateTime @default(now())
-  
-  @@map("audit_logs")
-}
-
-model WhatsAppTemplate {
-  id          String   @id @default(uuid())
-  name        String
-  trigger     String
-  content     String
-  variables   String[]
-  isActive    Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("whatsapp_templates")
-}
-
-model AppSetting {
-  id                          String   @id @default(uuid())
-  companyName                 String   @default("SERVISTECH")
-  defaultWarrantyDays         Int      @default(90)
-  igtfPercentage              Decimal  @default(3) @db.Decimal(5, 2)
-  warrantyFundPercentage      Decimal  @default(10) @db.Decimal(5, 2)
-  bcvAutoSync                 Boolean  @default(true)
-  bcvSyncHour                 Int      @default(8)
-  whatsappEnabled             Boolean  @default(true)
-  
-  updatedAt                   DateTime @updatedAt
-  
-  @@map("app_settings")
-}
+  invoice     Invoice        @relation(fields: [invoiceId
