@@ -1,0 +1,666 @@
+openapi: 3.0.0
+info:
+  title: SERVISTECH ERP V4.0 API
+  description: |
+    API completa para gestión técnica y comercial multi-sede.
+    
+    ## Características principales:
+    - Multi-tenancy con Row Level Security
+    - Gestión de garantías independiente
+    - Sistema de comisiones y contra-cargos
+    - Sincronización BCV/Binance
+    - Portal de delivery para clientes
+    - Petty cash con evidencia fotográfica
+  version: 4.0.0
+  contact:
+    name: SERVISTECH Support
+    email: support@servistech.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://api.servistech.com/api
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [SUPER_ADMIN, GERENTE, ENCARGADA, ANFITRION, TECNICO, QA, ALMACEN, MENSAJERO]
+        storeId:
+          type: string
+          format: uuid
+        commissionRate:
+          type: number
+          description: Porcentaje de comisión para técnicos
+        isActive:
+          type: boolean
+
+    ServiceOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        status:
+          type: string
+          enum: [TRIAJE, DIAGNOSTICO, ESPERA_REPUESTO, MICRO_SOLDADURA, QA, LISTO, ENTREGADO, GARANTIA]
+        priority:
+          type: string
+          enum: [BAJA, MEDIA, ALTA, URGENTE, GARANTIA]
+        reportedIssue:
+          type: string
+        estimatedCost:
+          type: number
+        finalCost:
+          type: number
+        grossProfit:
+          type: number
+          description: Utilidad bruta calculada (COGS+)
+
+    WarrantyClaim:
+      type: object
+      properties:
+        id:
+          type: string
+        warrantyNumber:
+          type: string
+        originalOrderId:
+          type: string
+        status:
+          type: string
+          enum: [PENDIENTE, APROBADA, RECHAZADA, EN_REPARACION, COMPLETADA, CANCELADA]
+        cause:
+          type: string
+          enum: [ERROR_HUMANO, REPUESTO_DEFECTUOSO, FALLA_REINCIDENTE, DAÑO_USUARIO, OTRO]
+        causeNotes:
+          type: string
+        isHumanError:
+          type: boolean
+
+    Commission:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        technicianId:
+          type: string
+        grossProfit:
+          type: number
+        commissionRate:
+          type: number
+        amount:
+          type: number
+        flatRateAmount:
+          type: number
+        totalDebits:
+          type: number
+        netAmount:
+          type: number
+        status:
+          type: string
+          enum: [PENDIENTE, APROBADA, PAGADA, DEBITADA]
+
+    TechnicianDebit:
+      type: object
+      properties:
+        id:
+          type: string
+        commissionId:
+          type: string
+        reason:
+          type: string
+          enum: [DANO_ACCIDENTAL, REPUESTO_ROTO, ERROR_REPARACION, PERDIDA_EQUIPO, OTRO]
+        description:
+          type: string
+        amount:
+          type: number
+        photos:
+          type: array
+          items:
+            type: string
+
+    DeliveryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        deviceType:
+          type: string
+        deviceModel:
+          type: string
+        lockType:
+          type: string
+          enum: [NONE, PATTERN, PIN, PASSWORD, FACE_ID, FINGERPRINT]
+        pattern:
+          type: array
+          items:
+            type: integer
+        issue:
+          type: string
+        photos:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [pending, confirmed, picked_up, delivered]
+
+    FixedExpense:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        amount:
+          type: number
+        category:
+          type: string
+          enum: [ALQUILER, NOMINA, SERVICIOS, SUMINISTROS, MANTENIMIENTO, OTROS]
+        isRecurring:
+          type: boolean
+        dayOfMonth:
+          type: integer
+
+    PettyCashExpense:
+      type: object
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [USD, VES]
+        category:
+          type: string
+        receiptPhotos:
+          type: array
+          items:
+            type: string
+          description: URLs de fotos de comprobantes (obligatorio)
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Auth
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  # Warranties
+  /warranties:
+    get:
+      summary: Listar garantías
+      tags: [Warranties]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        200:
+          description: Lista de garantías
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WarrantyClaim'
+                  pagination:
+                    type: object
+
+    post:
+      summary: Crear garantía
+      tags: [Warranties]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                originalOrderId:
+                  type: string
+                cause:
+                  type: string
+                causeNotes:
+                  type: string
+                diagnosis:
+                  type: string
+                estimatedCost:
+                  type: number
+      responses:
+        201:
+          description: Garantía creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarrantyClaim'
+
+  /warranties/{id}:
+    get:
+      summary: Obtener garantía por ID
+      tags: [Warranties]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Garantía encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarrantyClaim'
+
+  /warranties/{id}/status:
+    patch:
+      summary: Actualizar estado de garantía
+      tags: [Warranties]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                solution:
+                  type: string
+                finalCost:
+                  type: number
+      responses:
+        200:
+          description: Estado actualizado
+
+  /warranties/stats/overview:
+    get:
+      summary: Estadísticas de garantías
+      tags: [Warranties]
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: Estadísticas
+
+  # Commissions
+  /commissions:
+    get:
+      summary: Listar comisiones
+      tags: [Commissions]
+      parameters:
+        - name: technicianId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: periodMonth
+          in: query
+          schema:
+            type: integer
+        - name: periodYear
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Lista de comisiones
+
+  /commissions/pay:
+    post:
+      summary: Pagar comisiones
+      tags: [Commissions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commissionIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        200:
+          description: Comisiones pagadas
+
+  /commissions/debits:
+    post:
+      summary: Crear contra-cargo
+      tags: [Commissions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commissionId:
+                  type: string
+                reason:
+                  type: string
+                description:
+                  type: string
+                amount:
+                  type: number
+                photos:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        201:
+          description: Débito creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicianDebit'
+
+  /commissions/payroll-report:
+    get:
+      summary: Reporte de nómina
+      tags: [Commissions]
+      parameters:
+        - name: periodMonth
+          in: query
+          schema:
+            type: integer
+        - name: periodYear
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Reporte de nómina
+
+  # Targets & Expenses
+  /targets/expenses/fixed:
+    get:
+      summary: Listar gastos fijos
+      tags: [Targets]
+      responses:
+        200:
+          description: Lista de gastos fijos
+
+    post:
+      summary: Crear gasto fijo
+      tags: [Targets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FixedExpense'
+      responses:
+        201:
+          description: Gasto creado
+
+  /targets/daily-calculation:
+    get:
+      summary: Calcular meta diaria
+      tags: [Targets]
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: Cálculo de meta diaria
+
+  /targets/dashboard:
+    get:
+      summary: Dashboard de metas
+      tags: [Targets]
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+      responses:
+        200:
+          description: Dashboard de metas
+
+  # Delivery
+  /delivery/requests:
+    get:
+      summary: Listar solicitudes de delivery
+      tags: [Delivery]
+      responses:
+        200:
+          description: Lista de solicitudes
+
+    post:
+      summary: Crear solicitud de delivery (público)
+      tags: [Delivery]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+      responses:
+        201:
+          description: Solicitud creada
+
+  /delivery/requests/{id}/convert:
+    post:
+      summary: Convertir solicitud a orden
+      tags: [Delivery]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        201:
+          description: Orden creada
+
+  /delivery/tracking/{id}:
+    get:
+      summary: Tracking público de solicitud
+      tags: [Delivery]
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Estado de la solicitud
+
+  /delivery/messenger/{messengerId}/requests:
+    get:
+      summary: Solicitudes asignadas a mensajero
+      tags: [Delivery]
+      parameters:
+        - name: messengerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Lista de solicitudes del mensajero
+
+  # Petty Cash
+  /petty-cash/register/{registerId}/expenses:
+    get:
+      summary: Listar gastos de caja
+      tags: [Petty Cash]
+      parameters:
+        - name: registerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Lista de gastos
+
+    post:
+      summary: Crear gasto (con fotos obligatorias)
+      tags: [Petty Cash]
+      parameters:
+        - name: registerId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PettyCashExpense'
+      responses:
+        201:
+          description: Gasto creado
+        400:
+          description: Fotos requeridas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                    example: PHOTOS_REQUIRED
+
+  /petty-cash/upload-url:
+    post:
+      summary: Obtener URL para subir foto
+      tags: [Petty Cash]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                contentType:
+                  type: string
+      responses:
+        200:
+          description: URLs generadas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadUrl:
+                    type: string
+                  publicUrl:
+                    type: string
+                  expiresIn:
+                    type: integer

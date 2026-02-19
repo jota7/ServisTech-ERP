@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Completa - SERVISTECH ERP en Railway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset y base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Sans', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            text-align: justify;
+            text-align-last: left;
+        }
+        
+        /* Configuracion de pagina */
+        @page {
+            size: A4;
+            margin: 2cm 2cm 2.5cm 2cm;
+            @top-center { content: string(doctitle); font-size: 9pt; color: #666; }
+            @bottom-center { content: counter(page); font-size: 9pt; }
+        }
+        
+        @page :first { margin: 0; @top-center { content: none; } @bottom-center { content: none; } }
+        @page cover { @top-center { content: none; } @bottom-center { content: none; } }
+        @page toc { @top-center { content: none; } @bottom-center { content: none; } }
+        
+        body { string-set: doctitle ""; }
+        h1 { string-set: doctitle content(); }
+        
+        /* Portada */
+        .cover {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+            page: cover;
+            page-break-after: always;
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
+        }
+        
+        .cover-decoration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cover-decoration::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        
+        .cover-decoration::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+        }
+        
+        .cover-line {
+            position: absolute;
+            top: 30%;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        }
+        
+        .cover-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 85%;
+            z-index: 10;
+            color: white;
+        }
+        
+        .cover-icon {
+            font-size: 48pt;
+            margin-bottom: 1cm;
+        }
+        
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 700;
+            margin-bottom: 0.5cm;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .cover-subtitle {
+            font-size: 16pt;
+            font-weight: 400;
+            margin-bottom: 2cm;
+            opacity: 0.9;
+        }
+        
+        .cover-meta {
+            font-size: 12pt;
+            line-height: 2;
+            opacity: 0.8;
+        }
+        
+        .cover-version {
+            position: absolute;
+            bottom: 2cm;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10pt;
+            opacity: 0.6;
+            color: white;
+        }
+        
+        /* Tabla de contenidos */
+        .toc-page {
+            page: toc;
+            page-break-after: always;
+        }
+        
+        .toc-title {
+            font-size: 24pt;
+            font-weight: 700;
+            color: #1a365d;
+            margin-bottom: 1cm;
+            text-align: center;
+            border-bottom: 3px solid #3182ce;
+            padding-bottom: 0.5cm;
+        }
+        
+        .toc { list-style: none; padding: 0; }
+        .toc li { margin: 0.4cm 0; }
+        .toc a { 
+            color: #333; 
+            text-decoration: none; 
+            display: flex;
+            align-items: baseline;
+        }
+        .toc a::after {
+            content: leader('.') target-counter(attr(href url), page);
+            flex: 1;
+            text-align: right;
+        }
+        .toc-section { font-weight: 700; font-size: 12pt; color: #1a365d; }
+        .toc-subsection { padding-left: 1cm; font-size: 11pt; }
+        
+        /* Titulos */
+        h1 {
+            font-size: 20pt;
+            font-weight: 700;
+            color: #1a365d;
+            margin: 1cm 0 0.5cm 0;
+            padding-bottom: 0.3cm;
+            border-bottom: 2px solid #3182ce;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #2c5282;
+            margin: 0.8cm 0 0.4cm 0;
+            page-break-after: avoid;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            font-weight: 600;
+            color: #333;
+            margin: 0.6cm 0 0.3cm 0;
+            page-break-after: avoid;
+        }
+        
+        /* Parrafos */
+        p { margin: 0.4cm 0; }
+        
+        /* Cajas de informacion */
+        .info-box {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .info-box-title {
+            font-weight: 700;
+            color: #2c5282;
+            margin-bottom: 0.2cm;
+        }
+        
+        .warning-box {
+            background: #fffaf0;
+            border-left: 4px solid #dd6b20;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .warning-box-title {
+            font-weight: 700;
+            color: #c05621;
+            margin-bottom: 0.2cm;
+        }
+        
+        .success-box {
+            background: #f0fff4;
+            border-left: 4px solid #38a169;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .success-box-title {
+            font-weight: 700;
+            color: #276749;
+            margin-bottom: 0.2cm;
+        }
+        
+        /* Codigo y comandos */
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 10pt;
+            background: #f7fafc;
+            padding: 0.1cm 0.2cm;
+            border-radius: 3px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .code-block {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 9pt;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 0.5cm;
+            border-radius: 5px;
+            margin: 0.5cm 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            page-break-inside: avoid;
+        }
+        
+        .code-comment { color: #a0aec0; }
+        .code-command { color: #68d391; }
+        .code-output { color: #63b3ed; }
+        
+        /* Pasos numerados */
+        .step {
+            display: flex;
+            margin: 0.6cm 0;
+            page-break-inside: avoid;
+        }
+        
+        .step-number {
+            width: 1.5cm;
+            height: 1.5cm;
+            background: linear-gradient(135deg, #3182ce, #2c5282);
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14pt;
+            flex-shrink: 0;
+            margin-right: 0.5cm;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 700;
+            font-size: 12pt;
+            color: #1a365d;
+            margin-bottom: 0.2cm;
+        }
+        
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5cm 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        thead { display: table-header-group; }
+        
+        th {
+            background: #2c5282;
+            color: white;
+            padding: 0.3cm;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.3cm;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:nth-child(even) { background: #f7fafc; }
+        tr { page-break-inside: avoid; }
+        
+        /* Imagenes */
+        figure {
+            margin: 0.5cm 0;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        
+        figure img {
+            max-width: 100%;
+            max-height: 40vh;
+            height: auto;
+        }
+        
+        figcaption {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 0.2cm;
+        }
+        
+        figcaption::before {
+            content: attr(data-label) "  ";
+            font-weight: 700;
+        }
+        
+        /* Listas */
+        ul, ol {
+            margin: 0.3cm 0;
+            padding-left: 1cm;
+        }
+        
+        li { margin: 0.2cm 0; }
+        
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .checklist li {
+            padding-left: 1.2cm;
+            position: relative;
+        }
+        
+        .checklist li::before {
+            content: '[ ]';
+            position: absolute;
+            left: 0;
+            color: #3182ce;
+            font-weight: 700;
+        }
+        
+        /* Separador de seccion */
+        .section-break {
+            text-align: center;
+            margin: 1cm 0;
+            color: #a0aec0;
+        }
+        
+        /* Nota al pie */
+        .note {
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 0.3cm;
+            margin-top: 0.5cm;
+        }
+        
+        /* Enlaces */
+        a { color: #3182ce; word-break: break-all; }
+        
+        /* Pagina nueva */
+        .page-break { page-break-before: always; }
+        
+        /* Glosario */
+        .glossary-term {
+            font-weight: 700;
+            color: #2c5282;
+        }
+        
+        /* Diagrama simple */
+        .diagram-box {
+            border: 2px solid #3182ce;
+            border-radius: 8px;
+            padding: 0.5cm;
+            margin: 0.5cm 0;
+            text-align: center;
+            background: #f7fafc;
+            page-break-inside: avoid;
+        }
+        
+        .diagram-arrow {
+            text-align: center;
+            font-size: 20pt;
+            color: #3182ce;
+            margin: 0.2cm 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+    <div class="cover-decoration"></div>
+    <div class="cover-line"></div>
+    <div class="cover-content">
+        <div class="cover-icon">&#128736;</div>
+        <h1 class="cover-title">SERVISTECH ERP V4.0</h1>
+        <p class="cover-subtitle">Guia Completa de Despliegue</p>
+        <p class="cover-subtitle" style="font-size: 14pt;">Railway + GitHub + Cloudflare</p>
+        <div class="cover-meta">
+            <p>Para Principiantes</p>
+            <p>Paso a Paso sin Conocimientos de Programacion</p>
+        </div>
+    </div>
+    <div class="cover-version">Version 1.0 - Febrero 2025</div>
+</div>
+
+<!-- TABLA DE CONTENIDOS -->
+<div class="toc-page">
+    <h2 class="toc-title">Tabla de Contenidos</h2>
+    <ul class="toc">
+        <li class="toc-section"><a href="#intro">1. Introduccion</a></li>
+        <li class="toc-subsection"><a href="#que-necesitas">1.1 Que Necesitas</a></li>
+        <li class="toc-subsection"><a href="#conceptos">1.2 Conceptos Basicos</a></li>
+        
+        <li class="toc-section"><a href="#preparacion">2. Preparacion del Proyecto</a></li>
+        <li class="toc-subsection"><a href="#github">2.1 Crear Cuenta en GitHub</a></li>
+        <li class="toc-subsection"><a href="#subir-proyecto">2.2 Subir el Proyecto a GitHub</a></li>
+        
+        <li class="toc-section"><a href="#railway">3. Configurar Railway</a></li>
+        <li class="toc-subsection"><a href="#railway-cuenta">3.1 Crear Cuenta en Railway</a></li>
+        <li class="toc-subsection"><a href="#railway-proyecto">3.2 Crear el Proyecto</a></li>
+        <li class="toc-subsection"><a href="#railway-db">3.3 Crear Bases de Datos</a></li>
+        <li class="toc-subsection"><a href="#railway-variables">3.4 Configurar Variables</a></li>
+        <li class="toc-subsection"><a href="#railway-deploy">3.5 Desplegar el Proyecto</a></li>
+        
+        <li class="toc-section"><a href="#cloudflare">4. Configurar Cloudflare</a></li>
+        <li class="toc-subsection"><a href="#cf-cuenta">4.1 Crear Cuenta</a></li>
+        <li class="toc-subsection"><a href="#cf-dominio">4.2 Agregar tu Dominio</a></li>
+        <li class="toc-subsection"><a href="#cf-dns">4.3 Configurar DNS</a></li>
+        <li class="toc-subsection"><a href="#cf-ssl">4.4 Configurar SSL</a></li>
+        
+        <li class="toc-section"><a href="#finalizar">5. Finalizar Configuracion</a></li>
+        <li class="toc-subsection"><a href="#migraciones">5.1 Crear Base de Datos</a></li>
+        <li class="toc-subsection"><a href="#admin">5.2 Crear Usuario Admin</a></li>
+        
+        <li class="toc-section"><a href="#solucion">6. Solucion de Problemas</a></li>
+        <li class="toc-section"><a href="#glosario">7. Glosario de Terminos</a></li>
+    </ul>
+</div>
+
+<!-- INTRODUCCION -->
+<h1 id="intro">1. Introduccion</h1>
+
+<p>Esta guia te ensenara a desplegar <strong>SERVISTECH ERP V4.0</strong> en internet para que puedas acceder a el desde cualquier lugar. No necesitas saber programacion, solo seguir los pasos uno por uno.</p>
+
+<div class="info-box">
+    <div class="info-box-title">Que es SERVISTECH ERP?</div>
+    <p>Es un sistema de gestion para negocios de reparacion de celulares. Te permite administrar clientes, ordenes de reparacion, inventario, garantias, comisiones y mas.</p>
+</div>
+
+<h2 id="que-necesitas">1.1 Que Necesitas</h2>
+
+<p>Antes de empezar, asegurate de tener:</p>
+
+<ul class="checklist">
+    <li>Una computadora con internet</li>
+    <li>Un correo electronico (Gmail, Outlook, etc.)</li>
+    <li>Un dominio comprado (ejemplo: tunegocio.com)</li>
+    <li>Los archivos del proyecto SERVISTECH ERP</li>
+    <li>Aproximadamente 1 hora de tiempo</li>
+</ul>
+
+<div class="warning-box">
+    <div class="warning-box-title">Importante sobre el Dominio</div>
+    <p>Si aun no tienes un dominio, puedes comprar uno en:</p>
+    <ul>
+        <li><strong>Cloudflare Registrar</strong>: cloudflare.com (recomendado)</li>
+        <li><strong>Namecheap</strong>: namecheap.com</li>
+        <li><strong>GoDaddy</strong>: godaddy.com</li>
+    </ul>
+    <p>El dominio debe estar configurado para usar los servidores de nombres (nameservers) de Cloudflare.</p>
+</div>
+
+<h2 id="conceptos">1.2 Conceptos Basicos</h2>
+
+<p>Antes de comenzar, entendamos algunos terminos que usaremos:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Termino</th>
+            <th>Explicacion Simple</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="glossary-term">GitHub</span></td>
+            <td>Una pagina web donde guardamos el codigo del proyecto, como un Dropbox para programadores.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Railway</span></td>
+            <td>Un servicio que ejecuta el proyecto en internet las 24 horas.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Cloudflare</span></td>
+            <td>Un servicio que conecta tu dominio con Railway y agrega seguridad.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Dominio</span></td>
+            <td>La direccion de tu pagina web (ej: erp.tunegocio.com).</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Base de Datos</span></td>
+            <td>Donde se guarda toda la informacion: clientes, reparaciones, usuarios, etc.</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- PREPARACION -->
+<h1 id="preparacion" class="page-break">2. Preparacion del Proyecto</h1>
+
+<p>Primero necesitamos subir el proyecto a GitHub para que Railway pueda acceder a el.</p>
+
+<h2 id="github">2.1 Crear Cuenta en GitHub</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Abre github.com</div>
+        <p>En tu navegador, ve a <strong>github.com</strong> y haz clic en el boton verde <strong>"Sign up"</strong> (Registrarse).</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Completa el registro</div>
+        <ul>
+            <li>Ingresa tu correo electronico</li>
+            <li>Crea una contrasena segura</li>
+            <li>Elige un nombre de usuario</li>
+            <li>Completa la verificacion (puzzle o codigo)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Verifica tu correo</div>
+        <p>GitHub enviara un correo con un enlace. Abre tu correo y haz clic en el enlace para activar tu cuenta.</p>
+    </div>
+</div>
+
+<h2 id="subir-proyecto">2.2 Subir el Proyecto a GitHub</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Crear un nuevo repositorio</div>
+        <p>En GitHub, haz clic en el boton <strong>"New"</strong> o <strong>"+"</strong> y selecciona <strong>"New repository"</strong>.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Configurar el repositorio</div>
+        <ul>
+            <li><strong>Repository name</strong>: escribe <code>servistech-erp</code></li>
+            <li><strong>Description</strong>: (opcional) Sistema ERP para reparacion de celulares</li>
+            <li>Selecciona <strong>"Public"</strong> (o Private si prefieres)</li>
+            <li>Marca la casilla <strong>"Add a README file"</strong></li>
+            <li>Haz clic en <strong>"Create repository"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Subir los archivos del proyecto</div>
+        <p>En tu repositorio nuevo:</p>
+        <ol>
+            <li>Haz clic en el boton <strong>"Add file"</strong></li>
+            <li>Selecciona <strong>"Upload files"</strong></li>
+            <li>Haz clic en <strong>"choose your files"</strong></li>
+            <li>Selecciona TODA la carpeta del proyecto SERVISTECH ERP</li>
+            <li>Espera a que se suban todos los archivos</li>
+            <li>Escribe un mensaje como: "Primer commit - Proyecto inicial"</li>
+            <li>Haz clic en <strong>"Commit changes"</strong></li>
+        </ol>
+    </div>
+</div>
+
+<div class="success-box">
+    <div class="success-box-title">Listo!</div>
+    <p>Tu proyecto ahora esta guardado en GitHub. Railway podra acceder a el desde alli.</p>
+</div>
+
+<!-- RAILWAY -->
+<h1 id="railway" class="page-break">3. Configurar Railway</h1>
+
+<p>Railway es el servicio que ejecutara tu proyecto en internet. Conectaremos Railway con tu cuenta de GitHub.</p>
+
+<h2 id="railway-cuenta">3.1 Crear Cuenta en Railway</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Abre railway.app</div>
+        <p>Ve a <strong>railway.app</strong> en tu navegador.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Registrate con GitHub</div>
+        <p>Haz clic en el boton <strong>"Login with GitHub"</strong>. Esto conectara Railway con tu cuenta de GitHub automaticamente.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Autoriza Railway</div>
+        <p>GitHub te pedira permiso para que Railway acceda a tus repositorios. Haz clic en <strong>"Authorize Railway"</strong>.</p>
+    </div>
+</div>
+
+<h2 id="railway-proyecto">3.2 Crear el Proyecto</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Crear nuevo proyecto</div>
+        <p>En el dashboard de Railway, haz clic en el boton <strong>"New Project"</strong> (Nuevo Proyecto).</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Seleccionar fuente</div>
+        <p>Haz clic en <strong>"Deploy from GitHub repo"</strong> (Desplegar desde repositorio de GitHub).</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Seleccionar tu repositorio</div>
+        <ul>
+            <li>Busca <code>servistech-erp</code> en la lista</li>
+            <li>Si no aparece, haz clic en <strong>"Configure GitHub App"</strong> y selecciona tu repositorio</li>
+            <li>Haz clic en <strong>"Add"</strong> o <strong>"Install"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">4</div>
+    <div class="step-content">
+        <div class="step-title">Configurar el deploy</div>
+        <ul>
+            <li>Selecciona la rama <strong>"main"</strong></li>
+            <li>En <strong>Root Directory</strong>, dejalo vacio (usa la raiz)</li>
+            <li>Haz clic en <strong>"Deploy"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="info-box">
+    <div class="info-box-title">Que esta pasando?</div>
+    <p>Railway esta leyendo el archivo <code>render.yaml</code> de tu proyecto, que le dice exactamente que servicios crear y como configurarlos.</p>
+</div>
+
+<h2 id="railway-db">3.3 Crear Bases de Datos</h2>
+
+<p>El sistema necesita dos bases de datos: PostgreSQL (para guardar datos) y Redis (para cache).</p>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Agregar PostgreSQL</div>
+        <ul>
+            <li>En tu proyecto de Railway, haz clic en <strong>"New"</strong></li>
+            <li>Selecciona <strong>"Database"</strong></li>
+            <li>Selecciona <strong>"Add PostgreSQL"</strong></li>
+            <li>Espera unos segundos a que se cree</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Agregar Redis</div>
+        <ul>
+            <li>Haz clic en <strong>"New"</strong> nuevamente</li>
+            <li>Selecciona <strong>"Database"</strong></li>
+            <li>Selecciona <strong>"Add Redis"</strong></li>
+            <li>Espera a que se cree</li>
+        </ul>
+    </div>
+</div>
+
+<h2 id="railway-variables">3.4 Configurar Variables de Entorno</h2>
+
+<p>Las variables de entorno son configuraciones secretas que el sistema necesita para funcionar.</p>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Ir a Variables</div>
+        <p>En Railway, haz clic en el servicio <strong>"servistech-api"</strong> (el backend).</p>
+        <p>Luego haz clic en la pestana <strong>"Variables"</strong>.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Agregar variables necesarias</div>
+        <p>Haz clic en <strong>"New Variable"</strong> y agrega cada una de estas:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Valor</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>JWT_SECRET</code></td>
+                    <td>Una clave larga y segura</td>
+                    <td>Para seguridad de sesiones</td>
+                </tr>
+                <tr>
+                    <td><code>CORS_ORIGIN</code></td>
+                    <td>https://erp.tudominio.com</td>
+                    <td>Tu dominio (cambia por el tuyo)</td>
+                </tr>
+                <tr>
+                    <td><code>BCV_SCRAPE_ENABLED</code></td>
+                    <td>true</td>
+                    <td>Activar scraping de tasas BCV</td>
+                </tr>
+                <tr>
+                    <td><code>BINANCE_API_ENABLED</code></td>
+                    <td>true</td>
+                    <td>Activar tasas de Binance</td>
+                </tr>
+                <tr>
+                    <td><code>AUDIT_LOG_ENABLED</code></td>
+                    <td>true</td>
+                    <td>Guardar registro de cambios</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="warning-box">
+    <div class="warning-box-title">Como generar JWT_SECRET</div>
+    <p>El JWT_SECRET debe ser una clave larga y aleatoria. Puedes usar esta pagina para generarla:</p>
+    <p><strong>randomkeygen.com</strong> - Selecciona "CodeIgniter Encryption Keys" y copia cualquiera.</p>
+    <p>O simplemente escribe una frase larga y mezclada con numeros y simbolos.</p>
+</div>
+
+<h2 id="railway-deploy">3.5 Desplegar el Proyecto</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Redeploy automatico</div>
+        <p>Despues de agregar las variables, Railway reiniciara automaticamente el servicio. Espera unos 2-3 minutos.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Verificar el estado</div>
+        <ul>
+            <li>Haz clic en el servicio <strong>"servistech-api"</strong></li>
+            <li>Ve a la pestana <strong>"Deployments"</strong></li>
+            <li>Debes ver un check verde indicando que esta funcionando</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Obtener las URLs</div>
+        <p>En el dashboard principal de Railway, veras los servicios con sus URLs:</p>
+        <ul>
+            <li><strong>servistech-erp</strong>: URL del frontend</li>
+            <li><strong>servistech-api</strong>: URL del backend</li>
+            <li><strong>servistech-websocket</strong>: URL del WebSocket</li>
+        </ul>
+        <p><strong>Anota estas URLs</strong>, las necesitaras para configurar Cloudflare.</p>
+    </div>
+</div>
+
+<!-- CLOUDFLARE -->
+<h1 id="cloudflare" class="page-break">4. Configurar Cloudflare</h1>
+
+<p>Cloudflare conectara tu dominio personalizado con Railway y agregara seguridad SSL (el candado verde en el navegador).</p>
+
+<h2 id="cf-cuenta">4.1 Crear Cuenta en Cloudflare</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Registrarse en Cloudflare</div>
+        <ul>
+            <li>Ve a <strong>cloudflare.com</strong></li>
+            <li>Haz clic en <strong>"Sign Up"</strong></li>
+            <li>Usa el mismo correo que usaste para GitHub</li>
+            <li>Completa el registro</li>
+        </ul>
+    </div>
+</div>
+
+<h2 id="cf-dominio">4.2 Agregar tu Dominio</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Anadir sitio web</div>
+        <ul>
+            <li>En el dashboard de Cloudflare, haz clic en <strong>"Add a Site"</strong></li>
+            <li>Escribe tu dominio: <code>tunegocio.com</code></li>
+            <li>Haz clic en <strong>"Add Site"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Seleccionar plan</div>
+        <ul>
+            <li>Selecciona el plan <strong>"Free"</strong> (Gratis)</li>
+            <li>Haz clic en <strong>"Continue"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Revisar registros DNS</div>
+        <p>Cloudflare escaneara tus registros DNS actuales. Esto puede tomar unos segundos.</p>
+        <p>Haz clic en <strong>"Continue"</strong> cuando termine.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">4</div>
+    <div class="step-content">
+        <div class="step-title">Cambiar nameservers</div>
+        <p>Cloudflare te dara dos nameservers (ejemplo):</p>
+        <ul>
+            <li><code>bob.ns.cloudflare.com</code></li>
+            <li><code>lara.ns.cloudflare.com</code></li>
+        </ul>
+        <p>Debes cambiarlos en tu proveedor de dominio:</p>
+        <ol>
+            <li>Inicia sesion donde compraste tu dominio</li>
+            <li>Busca la seccion "Nameservers" o "Servidores de nombres"</li>
+            <li>Cambia a los que te dio Cloudflare</li>
+            <li>Guarda los cambios</li>
+        </ol>
+    </div>
+</div>
+
+<div class="warning-box">
+    <div class="warning-box-title">Tiempo de espera</div>
+    <p>El cambio de nameservers puede tomar de <strong>15 minutos a 24 horas</strong> en propagarse por todo internet. Ten paciencia.</p>
+</div>
+
+<h2 id="cf-dns">4.3 Configurar DNS</h2>
+
+<p>Ahora conectaremos tu dominio con Railway.</p>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Ir a DNS</div>
+        <p>En Cloudflare, selecciona tu dominio y haz clic en la pestana <strong>"DNS"</strong>.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Agregar registro CNAME para el frontend</div>
+        <ul>
+            <li>Haz clic en <strong>"Add record"</strong></li>
+            <li><strong>Type</strong>: CNAME</li>
+            <li><strong>Name</strong>: erp</li>
+            <li><strong>Target</strong>: (URL de Railway del frontend, ejemplo: servistech-erp.up.railway.app)</li>
+            <li>Deja el TTL en "Auto"</li>
+            <li>Haz clic en <strong>"Save"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Agregar registro CNAME para el API</div>
+        <ul>
+            <li>Haz clic en <strong>"Add record"</strong></li>
+            <li><strong>Type</strong>: CNAME</li>
+            <li><strong>Name</strong>: api</li>
+            <li><strong>Target</strong>: (URL de Railway del API, ejemplo: servistech-api.up.railway.app)</li>
+            <li>Haz clic en <strong>"Save"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">4</div>
+    <div class="step-content">
+        <div class="step-title">Agregar registro CNAME para WebSocket</div>
+        <ul>
+            <li>Haz clic en <strong>"Add record"</strong></li>
+            <li><strong>Type</strong>: CNAME</li>
+            <li><strong>Name</strong>: ws</li>
+            <li><strong>Target</strong>: (URL de Railway del websocket, ejemplo: servistech-websocket.up.railway.app)</li>
+            <li>Haz clic en <strong>"Save"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<h2 id="cf-ssl">4.4 Configurar SSL</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Ir a SSL/TLS</div>
+        <p>En Cloudflare, haz clic en la pestana <strong>"SSL/TLS"</strong>.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Seleccionar modo SSL</div>
+        <ul>
+            <li>En "Overview", selecciona <strong>"Full (strict)"</strong></li>
+            <li>Esto activa el certificado SSL gratuito</li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Forzar HTTPS</div>
+        <ul>
+            <li>Ve a <strong>"Edge Certificates"</strong></li>
+            <li>Activa <strong>"Always Use HTTPS"</strong></li>
+            <li>Activa <strong>"Automatic HTTPS Rewrites"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="success-box">
+    <div class="success-box-title">Dominio Configurado!</div>
+    <p>Ahora tu sistema estara disponible en:</p>
+    <ul>
+        <li><strong>https://erp.tudominio.com</strong> - La aplicacion web</li>
+        <li><strong>https://api.tudominio.com</strong> - El API backend</li>
+        <li><strong>wss://ws.tudominio.com</strong> - WebSocket (notificaciones en tiempo real)</li>
+    </ul>
+</div>
+
+<!-- FINALIZAR -->
+<h1 id="finalizar" class="page-break">5. Finalizar Configuracion</h1>
+
+<p>Ahora necesitamos crear las tablas en la base de datos y un usuario administrador.</p>
+
+<h2 id="migraciones">5.1 Crear Base de Datos (Migraciones)</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">Abrir consola de Railway</div>
+        <ul>
+            <li>En Railway, haz clic en el servicio <strong>"servistech-api"</strong></li>
+            <li>Ve a la pestana <strong>"Console"</strong></li>
+        </ul>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Ejecutar migraciones</div>
+        <p>Escribe este comando y presiona Enter:</p>
+        <div class="code-block">npx prisma migrate deploy</div>
+        <p>Esto creara todas las tablas necesarias en la base de datos.</p>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+        <div class="step-title">Verificar</div>
+        <p>Si todo salio bien, veras un mensaje como:</p>
+        <div class="code-block"><span class="code-output">Your database is now in sync with your schema.</span></div>
+    </div>
+</div>
+
+<h2 id="admin">5.2 Crear Usuario Administrador</h2>
+
+<div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+        <div class="step-title">En la misma consola</div>
+        <p>Escribe este comando:</p>
+        <div class="code-block">npx ts-node scripts/create-admin.ts</div>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+        <div class="step-title">Anotar credenciales</div>
+        <p>El sistema creara automaticamente un usuario admin:</p>
+        <ul>
+            <li><strong>Email</strong>: admin@servistech.com</li>
+            <li><strong>Password</strong>: Admin123!</li>
+        </ul>
+        <div class="warning-box">
+            <div class="warning-box-title">Cambia la contrasena!</div>
+            <p>La primera vez que entres, cambia la contrasena por una mas segura.</p>
+        </div>
+    </div>
+</div>
+
+<div class="success-box">
+    <div class="success-box-title">Sistema Listo!</div>
+    <p>Tu SERVISTECH ERP V4.0 esta completamente configurado y funcionando.</p>
+    <p>Accede a: <strong>https://erp.tudominio.com</strong></p>
+</div>
+
+<!-- SOLUCION DE PROBLEMAS -->
+<h1 id="solucion" class="page-break">6. Solucion de Problemas</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Problema</th>
+            <th>Solucion</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>"Build failed" en Railway</td>
+            <td>Verifica que el archivo <code>render.yaml</code> este en la raiz del proyecto en GitHub.</td>
+        </tr>
+        <tr>
+            <td>"Database connection error"</td>
+            <td>Asegurate de que PostgreSQL este creado en Railway y que las variables de entorno esten correctas.</td>
+        </tr>
+        <tr>
+            <td>La pagina no carga (error 404)</td>
+            <td>Verifica los registros DNS en Cloudflare. Asegurate de que los CNAME apunten a las URLs correctas de Railway.</td>
+        </tr>
+        <tr>
+            <td>Error de CORS</td>
+            <td>Verifica que la variable <code>CORS_ORIGIN</code> tenga tu dominio exacto con https://</td>
+        </tr>
+        <tr>
+            <td>No puedo hacer login</td>
+            <td>Verifica que ejecutaste las migraciones y creaste el usuario admin.</td>
+        </tr>
+        <tr>
+            <td>El dominio no funciona</td>
+            <td>Espera mas tiempo (hasta 24 horas) para que los cambios de DNS se propaguen.</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- GLOSARIO -->
+<h1 id="glosario" class="page-break">7. Glosario de Terminos</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Termino</th>
+            <th>Significado</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="glossary-term">Backend</span></td>
+            <td>La parte del sistema que procesa datos y logica. No se ve, pero hace todo el trabajo.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">CNAME</span></td>
+            <td>Un tipo de registro DNS que apunta un nombre de dominio a otro.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Deploy</span></td>
+            <td>Subir y poner a funcionar el proyecto en un servidor de internet.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">DNS</span></td>
+            <td>Sistema que traduce nombres de dominio (ej: google.com) a direcciones IP.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Frontend</span></td>
+            <td>La parte visual del sistema que los usuarios ven y usan.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">HTTPS</span></td>
+            <td>Version segura de HTTP. Muestra el candado verde en el navegador.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Migracion</span></td>
+            <td>Proceso de crear o modificar tablas en la base de datos.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Nameserver</span></td>
+            <td>Servidor que responde preguntas sobre tu dominio.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Repositorio</span></td>
+            <td>Carpeta donde se guarda el codigo del proyecto en GitHub.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">SSL</span></td>
+            <td>Certificado de seguridad que encripta la informacion entre usuario y servidor.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">Variable de Entorno</span></td>
+            <td>Configuracion secreta que el sistema necesita para funcionar.</td>
+        </tr>
+        <tr>
+            <td><span class="glossary-term">WebSocket</span></td>
+            <td>Tecnologia para enviar datos en tiempo real (notificaciones instantaneas).</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="section-break">***</div>
+
+<p style="text-align: center; color: #666; font-size: 10pt; margin-top: 2cm;">
+    <strong>SERVISTECH ERP V4.0</strong><br>
+    Guia de Despliegue para Principiantes<br>
+    Version 1.0 - Febrero 2025
+</p>
+
+</body>
+</html>

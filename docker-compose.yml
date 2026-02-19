@@ -1,0 +1,317 @@
+# =============================================================================
+# SERVISTECH ERP V4.0 - Docker Compose Production
+# Microservicios con PostgreSQL + PgBouncer + Redis + Backend API
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # PostgreSQL Database - Base de datos principal con RLS
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: servistech-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-servistech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-servistech_secure_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-servistech_erp}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+      - ./api/prisma/migrations:/docker-entrypoint-initdb.d:ro
+      - ./scripts/postgres/init-rls.sql:/docker-entrypoint-initdb.d/99-init-rls.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - servistech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-servistech} -d ${POSTGRES_DB:-servistech_erp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ===========================================================================
+  # PgBouncer - Connection Pooling para PostgreSQL
+  # ===========================================================================
+  pgbouncer:
+    image: pgbouncer/pgbouncer:1.20.1
+    container_name: servistech-pgbouncer
+    restart: unless-stopped
+    environment:
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_DATABASE: ${POSTGRES_DB:-servistech_erp}
+      DATABASES_USER: ${POSTGRES_USER:-servistech}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD:-servistech_secure_2024}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 5
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      MAX_DB_CONNECTIONS: 100
+      SERVER_IDLE_TIMEOUT: 600
+      SERVER_LIFETIME: 3600
+      CLIENT_IDLE_TIMEOUT: 0
+      CLIENT_LOGIN_TIMEOUT: 60
+      AUTH_TYPE: scram-sha-256
+    ports:
+      - "127.0.0.1:6432:6432"
+    networks:
+      - servistech-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # ===========================================================================
+  # Redis - Cache y Sesiones
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: servistech-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+      --requirepass ${REDIS_PASSWORD:-redis_secure_2024}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - servistech-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ===========================================================================
+  # Backend API - Node.js + Express + Prisma
+  # ===========================================================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: production
+    container_name: servistech-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-servistech}:${POSTGRES_PASSWORD:-servistech_secure_2024}@pgbouncer:6432/${POSTGRES_DB:-servistech_erp}?schema=public&connection_limit=5
+      DIRECT_URL: postgresql://${POSTGRES_USER:-servistech}:${POSTGRES_PASSWORD:-servistech_secure_2024}@postgres:5432/${POSTGRES_DB:-servistech_erp}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secure_2024}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your_super_secret_jwt_key_change_in_production}
+      JWT_EXPIRES_IN: 24h
+      BCV_SCRAPE_ENABLED: true
+      BINANCE_API_ENABLED: true
+      RATE_CACHE_TTL: 300
+      AUDIT_LOG_ENABLED: true
+      MAX_FILE_SIZE: 10485760
+      UPLOAD_PATH: /app/uploads
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://erp.servistech.com}
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+    volumes:
+      - api_uploads:/app/uploads
+      - api_logs:/app/logs
+    ports:
+      - "127.0.0.1:3001:3001"
+    networks:
+      - servistech-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ===========================================================================
+  # Frontend - React + Vite + Nginx
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      target: production
+    container_name: servistech-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: ${API_URL:-http://localhost:3001}
+      VITE_WS_URL: ${WS_URL:-ws://localhost:3002}
+    ports:
+      - "127.0.0.1:3000:80"
+    networks:
+      - servistech-network
+    depends_on:
+      - api
+      - websocket
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # ===========================================================================
+  # Nginx Reverse Proxy + Load Balancer
+  # ===========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: servistech-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+    networks:
+      - servistech-network
+    depends_on:
+      - api
+      - frontend
+      - websocket
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Cron Jobs - Tareas programadas (Rates, Backups)
+  # ===========================================================================
+  cron:
+    build:
+      context: ./cron
+      dockerfile: Dockerfile
+    container_name: servistech-cron
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:3001
+      API_KEY: ${CRON_API_KEY:-cron_secure_key_2024}
+      BACKUP_ENABLED: true
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-servistech-backups}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-servistech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-servistech_secure_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-servistech_erp}
+    volumes:
+      - backup_data:/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - servistech-network
+    depends_on:
+      - api
+      - postgres
+
+  # ===========================================================================
+  # WebSocket Server - Real-time notifications
+  # ===========================================================================
+  websocket:
+    build:
+      context: ./websocket
+      dockerfile: Dockerfile
+    container_name: servistech-websocket
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secure_2024}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your_super_secret_jwt_key_change_in_production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://erp.servistech.com}
+    ports:
+      - "127.0.0.1:3002:3002"
+    networks:
+      - servistech-network
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+# =============================================================================
+# Volúmenes persistentes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  api_uploads:
+    driver: local
+  api_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+  backup_data:
+    driver: local
+
+# =============================================================================
+# Redes
+# =============================================================================
+networks:
+  servistech-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

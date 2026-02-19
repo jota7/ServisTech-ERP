@@ -1,0 +1,940 @@
+// SERVISTECH ERP V4.0 - SCHEMA COMPLETO (VERSION LIMPIA PARA DEPLOY)
+// Multi-Tenancy con Row Level Security + Garantias + Comisiones + Omnicanalidad
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  SUPER_ADMIN    
+  GERENTE        
+  ENCARGADA      
+  ANFITRION      
+  TECNICO        
+  QA             
+  ALMACEN        
+  MENSAJERO      
+  CLIENTE        
+}
+
+enum OrderStatus {
+  TRIAJE
+  DIAGNOSTICO
+  ESPERA_REPUESTO
+  MICRO_SOLDADURA
+  QA
+  LISTO
+  ENTREGADO
+  GARANTIA
+}
+
+enum WarrantyStatus {
+  PENDIENTE     
+  APROBADA       
+  RECHAZADA      
+  EN_REPARACION  
+  COMPLETADA     
+  CANCELADA
+}
+
+enum WarrantyCause {
+  ERROR_HUMANO           
+  REPUESTO_DEFECTUOSO    
+  FALLA_REINCIDENTE      
+  DANO_USUARIO           // Corregido: de DAÑO a DANO
+  OTRO
+}
+
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+  GARANTIA   
+}
+
+enum DeviceType {
+  IPHONE
+  IPAD
+  ANDROID
+  WATCH
+  LAPTOP
+  OTHER
+}
+
+enum DeviceBrand {
+  APPLE
+  SAMSUNG
+  XIAOMI
+  MOTOROLA
+  HUAWEI
+  OTHER
+}
+
+enum LockType {
+  NONE
+  PATTERN
+  PIN
+  PASSWORD
+  FACE_ID
+  FINGERPRINT
+}
+
+enum PaymentMethod {
+  ZELLE
+  CASH_USD
+  CASH_VES
+  PAGO_MOVIL
+  BINANCE
+  TRANSFER
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  PARTIAL
+  CANCELLED
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  RECEIVED
+  CANCELLED
+}
+
+enum RegisterStatus {
+  OPEN
+  CLOSED
+  DISCREPANCY
+}
+
+enum PartType {
+  REPUESTO     
+  ACCESORIO    
+}
+
+enum CommissionStatus {
+  PENDIENTE
+  APROBADA
+  PAGADA
+  DEBITADA     
+}
+
+enum DebitReason {
+  DANO_ACCIDENTAL      // Corregido: de DAÑO a DANO
+  REPUESTO_ROTO
+  ERROR_REPARACION
+  PERDIDA_EQUIPO
+  OTRO
+}
+
+enum ExpenseCategory {
+  ALQUILER
+  NOMINA               // Corregido: de NÓMINA a NOMINA
+  SERVICIOS
+  SUMINISTROS
+  MANTENIMIENTO
+  OTROS
+}
+
+// ==================== MODELOS CORE ====================
+
+model User {
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  password        String
+  role            UserRole  @default(ANFITRION)
+  isActive        Boolean   @default(true)
+  avatar          String?
+  
+  commissionRate  Decimal   @default(35) @db.Decimal(5, 2) 
+  flatRatePerUnit Decimal   @default(1) @db.Decimal(10, 2)  
+  accessoryRate   Decimal   @default(10) @db.Decimal(5, 2)  
+  
+  storeId         String
+  store           Store     @relation(fields: [storeId], references: [id])
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastLogin       DateTime?
+  
+  ordersCreated   ServiceOrder[]   @relation("CreatedBy")
+  ordersAssigned  ServiceOrder[]   @relation("AssignedTo")
+  timeEntries     TimeEntry[]
+  cashRegisters   CashRegister[]
+  auditLogs       AuditLog[]
+  commissions     Commission[]
+  debits          TechnicianDebit[]
+  
+  @@map("users")
+  @@index([storeId])
+}
+
+model Store {
+  id              String     @id @default(uuid())
+  name            String
+  code            String     @unique
+  address         String
+  phone           String
+  email           String
+  logo            String?
+  isActive        Boolean    @default(true)
+  
+  rif             String?
+  razonSocial     String?
+  direccionFiscal String?    // Corregido: de dirección a direccion
+  
+  users           User[]
+  orders          ServiceOrder[]
+  parts           PartStock[]
+  cashRegisters   CashRegister[]
+  safeKits        SafeKit[]
+  courtesyDevices CourtesyDevice[]
+  invoices        Invoice[]
+  warranties      WarrantyClaim[]
+  expenses        FixedExpense[]
+  dailyTargets    DailyTarget[]
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  @@map("stores")
+}
+
+model BCVRate {
+  id          String    @id @default(uuid())
+  rate        Decimal   @db.Decimal(15, 4)
+  date        DateTime  @default(now())
+  source      String    
+  updatedBy   String?   
+  isBackup    Boolean   @default(false) 
+  
+  createdAt   DateTime  @default(now())
+  
+  @@map("bcv_rates")
+  @@index([date])
+}
+
+model BinanceRate {
+  id          String    @id @default(uuid())
+  rate        Decimal   @db.Decimal(15, 4)
+  usdtPrice   Decimal   @db.Decimal(10, 4) 
+  date        DateTime  @default(now())
+  source      String    
+  
+  createdAt   DateTime  @default(now())
+  
+  @@map("binance_rates")
+  @@index([date])
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  name        String
+  email       String?
+  phone       String
+  documentId  String    @unique
+  address     String?
+  
+  password    String?   
+  isPortalUser Boolean @default(false)
+  
+  devices     Device[]
+  orders      ServiceOrder[]
+  invoices    Invoice[]
+  loans       DeviceLoan[]
+  deliveries  DeliveryRequest[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("customers")
+}
+
+model Device {
+  id            String       @id @default(uuid())
+  type          DeviceType
+  brand         DeviceBrand
+  model         String
+  serialNumber  String
+  imei          String?
+  color         String?
+  storage       String?
+  notes         String?
+  
+  lockType      LockType     @default(NONE)
+  pattern       Int[]        
+  pin           String?      
+  password      String?      
+  credentialsNote String?    
+  
+  customerId    String
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  orders        ServiceOrder[]
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  @@map("devices")
+}
+
+model ServiceOrder {
+  id              String       @id @default(uuid())
+  orderNumber     String       @unique
+  status          OrderStatus  @default(TRIAJE)
+  priority        Priority     @default(MEDIA)
+  
+  reportedIssue   String
+  termsAccepted   Boolean      @default(false)
+  customerSignature String?
+  
+  diagnosis       String?
+  solution        String?
+  
+  estimatedCost   Decimal      @default(0) @db.Decimal(12, 2)
+  finalCost       Decimal      @default(0) @db.Decimal(12, 2)
+  paidAmount      Decimal      @default(0) @db.Decimal(12, 2)
+  
+  totalCost       Decimal      @default(0) @db.Decimal(12, 2)
+  grossProfit     Decimal      @default(0) @db.Decimal(12, 2) 
+  
+  customerId      String
+  customer        Customer     @relation(fields: [customerId], references: [id])
+  deviceId        String
+  device          Device       @relation(fields: [deviceId], references: [id])
+  storeId         String
+  store           Store        @relation(fields: [storeId], references: [id])
+  
+  createdById     String
+  createdBy       User         @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedToId    String?
+  assignedTo      User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  
+  checklist       ChecklistItem[]
+  photos          Photo[]
+  partsUsed       PartUsage[]
+  internalPhotos  Photo[]       @relation("InternalPhotos")
+  timeEntries     TimeEntry[]
+  qaResult        QAResult?
+  invoice         Invoice?
+  warranty        WarrantyClaim?
+  commission      Commission?
+  
+  safeKitId       String?
+  safeKit         SafeKit?      @relation(fields: [safeKitId], references: [id])
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  completedAt     DateTime?
+  
+  @@map("service_orders")
+  @@index([storeId])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model ChecklistItem {
+  id          String       @id @default(uuid())
+  category    String
+  item        String
+  checked     Boolean      @default(false)
+  notes       String?
+  
+  orderId     String
+  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("checklist_items")
+}
+
+model Photo {
+  id          String       @id @default(uuid())
+  url         String       
+  type        String       
+  description String?
+  
+  orderId     String
+  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  internalOrderId String?
+  internalOrder   ServiceOrder? @relation("InternalPhotos", fields: [internalOrderId], references: [id])
+  
+  uploadedAt  DateTime     @default(now())
+  
+  @@map("photos")
+}
+
+model WarrantyClaim {
+  id              String         @id @default(uuid())
+  warrantyNumber  String         @unique
+  status          WarrantyStatus @default(PENDIENTE)
+  
+  originalOrderId String         @unique
+  originalOrder   ServiceOrder   @relation(fields: [originalOrderId], references: [id])
+  
+  cause           WarrantyCause
+  causeNotes      String?        
+  isHumanError    Boolean        @default(false)
+  
+  diagnosis       String?
+  solution        String?
+  
+  estimatedCost   Decimal        @default(0) @db.Decimal(12, 2)
+  finalCost       Decimal        @default(0) @db.Decimal(12, 2)
+  
+  storeId         String
+  store           Store          @relation(fields: [storeId], references: [id])
+  
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  completedAt     DateTime?
+  
+  @@map("warranty_claims")
+  @@index([storeId])
+  @@index([status])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  color       String    @default("#39FF14")
+  
+  parts       Part[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("categories")
+}
+
+model Part {
+  id                String       @id @default(uuid())
+  sku               String       @unique
+  name              String
+  description       String?
+  
+  partType          PartType     @default(REPUESTO)
+  categoryId        String
+  category          Category     @relation(fields: [categoryId], references: [id])
+  compatibleModels  String[]
+  
+  costPrice         Decimal      @db.Decimal(12, 2)
+  salePrice         Decimal      @db.Decimal(12, 2)
+  shippingCost      Decimal      @default(0) @db.Decimal(12, 2)
+  operationalCost   Decimal      @default(0) @db.Decimal(12, 2)
+  warrantyFund      Decimal      @default(0) @db.Decimal(12, 2)
+  
+  minStock          Int          @default(3)
+  supplier          String?
+  
+  stock             PartStock[]
+  transfersFrom     StockTransfer[] @relation("FromTransfer")
+  transfersTo       StockTransfer[] @relation("ToTransfer")
+  usages            PartUsage[]
+  
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  @@map("parts")
+  @@index([partType])
+  @@index([categoryId])
+}
+
+model PartStock {
+  id        String   @id @default(uuid())
+  quantity  Int      @default(0)
+  reserved  Int      @default(0)
+  
+  partId    String
+  part      Part     @relation(fields: [partId], references: [id])
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  
+  @@unique([partId, storeId])
+  @@map("part_stocks")
+  @@index([storeId])
+}
+
+model StockTransfer {
+  id            String         @id @default(uuid())
+  quantity      Int
+  status        TransferStatus @default(PENDING)
+  
+  partId        String
+  part          Part           @relation(fields: [partId], references: [id])
+  fromStoreId   String
+  fromStore     Store          @relation("FromTransfer", fields: [fromStoreId], references: [id])
+  toStoreId     String
+  toStore       Store          @relation("ToTransfer", fields: [toStoreId], references: [id])
+  
+  requestedBy   String
+  approvedBy    String?
+  
+  sentAt        DateTime?
+  receivedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  
+  @@map("stock_transfers")
+}
+
+model PartUsage {
+  id          String       @id @default(uuid())
+  quantity    Int
+  costPrice   Decimal      @db.Decimal(12, 2)
+  salePrice   Decimal      @db.Decimal(12, 2)
+  
+  partId      String
+  part        Part         @relation(fields: [partId], references: [id])
+  orderId     String
+  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("part_usages")
+}
+
+model TimeEntry {
+  id          String       @id @default(uuid())
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?         
+  description String
+  
+  technicianId String
+  technician   User         @relation(fields: [technicianId], references: [id])
+  orderId      String
+  order        ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("time_entries")
+}
+
+model QAResult {
+  id          String       @id @default(uuid())
+  passed      Boolean
+  testDate    DateTime     @default(now())
+  notes       String?
+  
+  orderId     String       @unique
+  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  testedBy    String
+  
+  tests       QATest[]
+  
+  @@map("qa_results")
+}
+
+model QATest {
+  id          String       @id @default(uuid())
+  name        String
+  passed      Boolean      @default(false)
+  notes       String?
+  
+  qaResultId  String
+  qaResult    QAResult     @relation(fields: [qaResultId], references: [id], onDelete: Cascade)
+  
+  @@map("qa_tests")
+}
+
+model Commission {
+  id              String           @id @default(uuid())
+  
+  orderId         String           @unique
+  order           ServiceOrder     @relation(fields: [orderId], references: [id])
+  
+  grossProfit     Decimal          @db.Decimal(12, 2)  
+  commissionRate  Decimal          @db.Decimal(5, 2)   
+  amount          Decimal          @db.Decimal(12, 2)  
+  
+  flatRateAmount  Decimal          @default(0) @db.Decimal(12, 2)
+  
+  status          CommissionStatus @default(PENDIENTE)
+  
+  debits          TechnicianDebit[]
+  totalDebits     Decimal          @default(0) @db.Decimal(12, 2)
+  netAmount       Decimal          @db.Decimal(12, 2)  
+  
+  technicianId    String
+  technician      User             @relation(fields: [technicianId], references: [id])
+  
+  periodMonth     Int
+  periodYear      Int
+  
+  paidAt          DateTime?
+  paidBy          String?
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  @@map("commissions")
+  @@index([technicianId])
+  @@index([periodMonth, periodYear])
+}
+
+model TechnicianDebit {
+  id              String       @id @default(uuid())
+  
+  commissionId    String
+  commission      Commission   @relation(fields: [commissionId], references: [id])
+  
+  reason          DebitReason
+  description     String
+  amount          Decimal      @db.Decimal(12, 2)
+  
+  photos          String[]     
+  
+  technicianId    String
+  technician      User         @relation(fields: [technicianId], references: [id])
+  
+  approvedById    String?
+  approvedAt      DateTime?
+  
+  createdAt       DateTime     @default(now())
+  
+  @@map("technician_debits")
+  @@index([technicianId])
+}
+
+model FixedExpense {
+  id          String          @id @default(uuid())
+  name        String
+  amount      Decimal         @db.Decimal(12, 2)
+  category    ExpenseCategory
+  
+  isRecurring Boolean         @default(true)
+  dayOfMonth  Int?            
+  
+  storeId     String
+  store       Store           @relation(fields: [storeId], references: [id])
+  
+  isActive    Boolean         @default(true)
+  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  @@map("fixed_expenses")
+  @@index([storeId])
+}
+
+model DailyTarget {
+  id              String    @id @default(uuid())
+  date            DateTime
+  
+  targetAmount    Decimal   @db.Decimal(12, 2)
+  actualAmount    Decimal   @default(0) @db.Decimal(12, 2)
+  
+  fixedExpenses   Decimal   @default(0) @db.Decimal(12, 2)
+  pettyCashTotal  Decimal   @default(0) @db.Decimal(12, 2)
+  
+  netTarget       Decimal   @db.Decimal(12, 2)  
+  isMet           Boolean   @default(false)
+  
+  storeId         String
+  store           Store     @relation(fields: [storeId], references: [id])
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([date, storeId])
+  @@map("daily_targets")
+  @@index([storeId])
+}
+
+model SafeKit {
+  id              String          @id @default(uuid())
+  code            String          @unique
+  name            String
+  qrCode          String
+  status          String          @default("available")
+  
+  storeId         String
+  store           Store           @relation(fields: [storeId], references: [id])
+  
+  currentOrderId  String?         @unique
+  currentOrder    ServiceOrder?   @relation(fields: [currentOrderId], references: [id])
+  
+  createdAt       DateTime        @default(now())
+  
+  @@map("safe_kits")
+}
+
+model CourtesyDevice {
+  id            String       @id @default(uuid())
+  type          DeviceType
+  brand         DeviceBrand
+  model         String
+  serialNumber  String       @unique
+  status        String       @default("available")
+  
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
+  
+  loans         DeviceLoan[]
+  
+  createdAt     DateTime     @default(now())
+  
+  @@map("courtesy_devices")
+}
+
+model DeviceLoan {
+  id                String         @id @default(uuid())
+  loanDate          DateTime       @default(now())
+  expectedReturnDate DateTime
+  actualReturnDate  DateTime?
+  condition         String
+  notes             String?
+  
+  deviceId          String
+  device            CourtesyDevice @relation(fields: [deviceId], references: [id])
+  customerId        String
+  customer          Customer       @relation(fields: [customerId], references: [id])
+  orderId           String
+  
+  @@map("device_loans")
+}
+
+model DeliveryRequest {
+  id              String    @id @default(uuid())
+  
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  
+  address         String
+  latitude        Decimal?  @db.Decimal(10, 8)
+  longitude       Decimal?  @db.Decimal(11, 8)
+  
+  deviceType      DeviceType
+  deviceModel     String
+  deviceColor     String?
+  serialNumber    String?
+  imei            String?
+  
+  lockType        LockType  @default(NONE)
+  pattern         Int[]
+  pin             String?
+  password        String?
+  
+  issue           String
+  photos          String[]  
+  
+  status          String    @default("pending") 
+  
+  messengerId     String?
+  
+  requestedAt     DateTime  @default(now())
+  scheduledDate   DateTime?
+  completedAt     DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("delivery_requests")
+  @@index([customerId])
+  @@index([status])
+}
+
+model Invoice {
+  id              String         @id @default(uuid())
+  invoiceNumber   String         @unique
+  
+  subtotal        Decimal        @db.Decimal(12, 2)
+  igtfAmount      Decimal        @default(0) @db.Decimal(12, 2)
+  discount        Decimal        @default(0) @db.Decimal(12, 2)
+  total           Decimal        @db.Decimal(12, 2)
+  totalVES        Decimal        @db.Decimal(12, 2)
+  
+  rateType        String         @default("bcv") 
+  rateValue       Decimal        @db.Decimal(15, 4)
+  
+  paidTotal       Decimal        @default(0) @db.Decimal(12, 2)
+  status          InvoiceStatus  @default(PENDING)
+  
+  customerId      String
+  customer        Customer       @relation(fields: [customerId], references: [id])
+  storeId         String
+  store           Store          @relation(fields: [storeId], references: [id])
+  orderId         String?        @unique
+  order           ServiceOrder?  @relation(fields: [orderId], references: [id])
+  
+  items           InvoiceItem[]
+  payments        Payment[]
+  
+  createdBy       String
+  createdAt       DateTime       @default(now())
+  paidAt          DateTime?
+  
+  @@map("invoices")
+  @@index([storeId])
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  type        String   
+  description String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  total       Decimal  @db.Decimal(12, 2)
+  
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  @@map("invoice_items")
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  method      PaymentMethod
+  amount      Decimal       @db.Decimal(12, 2)
+  amountVES   Decimal?      @db.Decimal(12, 2)
+  reference   String?
+  bankName    String?
+  phoneNumber String?
+  email       String?
+  timestamp   DateTime      @default(now())
+  
+  invoiceId   String
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  @@map("payments")
+}
+
+model CashRegister {
+  id              String           @id @default(uuid())
+  
+  openingUSD      Decimal          @db.Decimal(12, 2)
+  openingVES      Decimal          @db.Decimal(12, 2)
+  
+  declaredUSD     Decimal?         @db.Decimal(12, 2)
+  declaredVES     Decimal?         @db.Decimal(12, 2)
+  
+  systemUSD       Decimal          @db.Decimal(12, 2)
+  systemVES       Decimal          @db.Decimal(12, 2)
+  
+  discrepancyUSD  Decimal?         @db.Decimal(12, 2)
+  discrepancyVES  Decimal?         @db.Decimal(12, 2)
+  
+  status          RegisterStatus
+  
+  storeId         String
+  store           Store            @relation(fields: [storeId], references: [id])
+  openedById      String
+  openedBy        User             @relation(fields: [openedById], references: [id])
+  closedById      String?
+  
+  expenses        PettyCashExpense[]
+  
+  openedAt        DateTime         @default(now())
+  closedAt        DateTime?
+  
+  @@map("cash_registers")
+  @@index([storeId])
+}
+
+model PettyCashExpense {
+  id              String       @id @default(uuid())
+  description     String
+  amount          Decimal      @db.Decimal(12, 2)
+  currency        String       
+  category        String
+  
+  receiptPhotos   String[]     
+  
+  registerId      String
+  register        CashRegister @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  createdBy       String
+  createdAt       DateTime     @default(now())
+  
+  @@map("petty_cash_expenses")
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  action      String    
+  entityType  String    
+  entityId    String
+  
+  oldValue    Json?
+  newValue    Json?
+  
+  ipAddress   String
+  userAgent   String?
+  
+  storeId     String?
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  timestamp   DateTime  @default(now())
+  
+  @@map("audit_logs")
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([storeId])
+}
+
+model WhatsAppTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  trigger     String
+  content     String
+  variables   String[]
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("whatsapp_templates")
+}
+
+model AppSetting {
+  id                          String   @id @default(uuid())
+  companyName                 String   @default("SERVISTECH")
+  logo                        String?
+  termsAndConditions          String   @default("")
+  
+  defaultWarrantyDays         Int      @default(90)
+  warrantyFundPercentage      Decimal  @default(10) @db.Decimal(5, 2)
+  
+  igtfPercentage              Decimal  @default(3) @db.Decimal(5, 2)
+  
+  bcvAutoSync                 Boolean  @default(true)
+  bcvSyncHour                 Int      @default(8)
+  useBinanceRate              Boolean  @default(false)
+  
+  whatsappEnabled             Boolean  @default(true)
+  
+  defaultTechnicianRate       Decimal  @default(35) @db.Decimal(5, 2)
+  defaultEncargadaFlatRate    Decimal  @default(1) @db.Decimal(10, 2)
+  defaultEncargadaAccessoryRate Decimal @default(10) @db.Decimal(5, 2)
+  
+  updatedAt                   DateTime @updatedAt
+  
+  @@map("app_settings")
+}
+
+model PrintFormat {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   
+  header      String
+  footer      String
+  showLogo    Boolean  @default(true)
+  showQR      Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("print_formats")
+}

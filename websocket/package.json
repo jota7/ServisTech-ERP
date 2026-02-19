@@ -1,0 +1,21 @@
+{
+  "name": "servistech-websocket",
+  "version": "4.0.0",
+  "description": "SERVISTECH ERP V4.0 - WebSocket Server for real-time notifications",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0",
+    "jsonwebtoken": "^9.0.2",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
