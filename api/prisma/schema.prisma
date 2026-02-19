@@ -1,4 +1,3 @@
-// SERVISTECH ERP - Versión Final Estable 5.22.0
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
@@ -9,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== ENUMS ====================
+// --- ENUMS ---
 enum UserRole {
   SUPER_ADMIN
   GERENTE
@@ -33,74 +32,6 @@ enum OrderStatus {
   GARANTIA
 }
 
-enum WarrantyStatus {
-  PENDIENTE
-  APROBADA
-  RECHAZADA
-  EN_REPARACION
-  COMPLETADA
-  CANCELADA
-}
-
-enum WarrantyCause {
-  ERROR_HUMANO
-  REPUESTO_DEFECTUOSO
-  FALLA_REINCIDENTE
-  DANO_USUARIO
-  OTRO
-}
-
-enum Priority {
-  BAJA
-  MEDIA
-  ALTA
-  URGENTE
-  GARANTIA
-}
-
-enum DeviceType {
-  IPHONE
-  IPAD
-  ANDROID
-  WATCH
-  LAPTOP
-  OTHER
-}
-
-enum DeviceBrand {
-  APPLE
-  SAMSUNG
-  XIAOMI
-  MOTOROLA
-  HUAWEI
-  OTHER
-}
-
-enum LockType {
-  NONE
-  PATTERN
-  PIN
-  PASSWORD
-  FACE_ID
-  FINGERPRINT
-}
-
-enum PaymentMethod {
-  ZELLE
-  CASH_USD
-  CASH_VES
-  PAGO_MOVIL
-  BINANCE
-  TRANSFER
-}
-
-enum InvoiceStatus {
-  PENDING
-  PAID
-  PARTIAL
-  CANCELLED
-}
-
 enum TransferStatus {
   PENDING
   IN_TRANSIT
@@ -108,42 +39,12 @@ enum TransferStatus {
   CANCELLED
 }
 
-enum RegisterStatus {
-  OPEN
-  CLOSED
-  DISCREPANCY
-}
-
 enum PartType {
   REPUESTO
   ACCESORIO
 }
 
-enum CommissionStatus {
-  PENDIENTE
-  APROBADA
-  PAGADA
-  DEBITADA
-}
-
-enum DebitReason {
-  DANO_ACCIDENTAL
-  REPUESTO_ROTO
-  ERROR_REPARACION
-  PERDIDA_EQUIPO
-  OTRO
-}
-
-enum ExpenseCategory {
-  ALQUILER
-  NOMINA
-  SERVICIOS
-  SUMINISTROS
-  MANTENIMIENTO
-  OTROS
-}
-
-// ==================== MODELOS ====================
+// --- MODELS ---
 
 model User {
   id              String    @id @default(uuid())
@@ -151,24 +52,12 @@ model User {
   email           String    @unique
   password        String
   role            UserRole  @default(ANFITRION)
-  isActive        Boolean   @default(true)
-  avatar          String?
-  commissionRate  Decimal   @default(35) @db.Decimal(5, 2)
-  flatRatePerUnit Decimal   @default(1) @db.Decimal(12, 2)
-  accessoryRate   Decimal   @default(10) @db.Decimal(5, 2)
   storeId         String
   store           Store     @relation(fields: [storeId], references: [id])
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  lastLogin       DateTime?
   ordersCreated   ServiceOrder[]   @relation("CreatedBy")
   ordersAssigned  ServiceOrder[]   @relation("AssignedTo")
   timeEntries     TimeEntry[]
-  cashRegisters   CashRegister[]
-  auditLogs       AuditLog[]
-  commissions     Commission[]
-  debits          TechnicianDebit[]
-
+  
   @@map("users")
 }
 
@@ -176,30 +65,12 @@ model Store {
   id              String     @id @default(uuid())
   name            String
   code            String     @unique
-  address         String
-  phone           String
-  email           String
-  logo            String?
-  isActive        Boolean    @default(true)
-  rif             String?
-  razonSocial     String?
-  direccionFiscal String?
-  
   users           User[]
   orders          ServiceOrder[]
   parts           PartStock[]
-  cashRegisters   CashRegister[]
   safeKits        SafeKit[]
-  courtesyDevices CourtesyDevice[]
-  invoices        Invoice[]
-  warranties      WarrantyClaim[]
-  expenses        FixedExpense[]
-  dailyTargets    DailyTarget[]
   transfersFrom   StockTransfer[] @relation("FromStore")
   transfersTo     StockTransfer[] @relation("ToStore")
-  
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
   
   @@map("stores")
 }
@@ -207,34 +78,22 @@ model Store {
 model Customer {
   id           String    @id @default(uuid())
   name         String
-  email        String?
   phone        String
   documentId   String    @unique
-  address      String?
-  isPortalUser Boolean @default(false)
   devices      Device[]
   orders       ServiceOrder[]
-  invoices     Invoice[]
-  loans        DeviceLoan[]
-  deliveries   DeliveryRequest[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  
   @@map("customers")
 }
 
 model Device {
   id           String       @id @default(uuid())
-  type         DeviceType
-  brand        DeviceBrand
   model        String
   serialNumber String
-  imei         String?
-  lockType     LockType     @default(NONE)
   customerId   String
   customer     Customer     @relation(fields: [customerId], references: [id])
   orders       ServiceOrder[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  
   @@map("devices")
 }
 
@@ -242,14 +101,6 @@ model ServiceOrder {
   id                String       @id @default(uuid())
   orderNumber       String       @unique
   status            OrderStatus  @default(TRIAJE)
-  priority          Priority     @default(MEDIA)
-  reportedIssue     String
-  termsAccepted     Boolean      @default(false)
-  estimatedCost     Decimal      @default(0) @db.Decimal(12, 2)
-  finalCost         Decimal      @default(0) @db.Decimal(12, 2)
-  paidAmount        Decimal      @default(0) @db.Decimal(12, 2)
-  totalCost         Decimal      @default(0) @db.Decimal(12, 2)
-  grossProfit       Decimal      @default(0) @db.Decimal(12, 2)
   
   customerId        String
   customer          Customer     @relation(fields: [customerId], references: [id])
@@ -276,7 +127,6 @@ model ServiceOrder {
   safeKit           SafeKit?      @relation(fields: [safeKitId], references: [id])
   
   createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
   @@map("service_orders")
 }
 
@@ -284,8 +134,6 @@ model Category {
   id          String    @id @default(uuid())
   name        String
   parts       Part[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
   @@map("categories")
 }
 
@@ -293,16 +141,11 @@ model Part {
   id                String       @id @default(uuid())
   sku               String       @unique
   name              String
-  partType          PartType     @default(REPUESTO)
   categoryId        String
   category          Category     @relation(fields: [categoryId], references: [id])
-  costPrice         Decimal      @db.Decimal(12, 2)
-  salePrice         Decimal      @db.Decimal(12, 2)
   stock             PartStock[]
   usages            PartUsage[]
   transfers         StockTransfer[] 
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
   @@map("parts")
 }
 
@@ -314,7 +157,6 @@ model PartStock {
   storeId   String
   store     Store    @relation(fields: [storeId], references: [id])
   @@unique([partId, storeId])
-  @@map("part_stocks")
 }
 
 model StockTransfer {
@@ -327,181 +169,66 @@ model StockTransfer {
   fromStore     Store          @relation("FromStore", fields: [fromStoreId], references: [id])
   toStoreId     String
   toStore       Store          @relation("ToStore", fields: [toStoreId], references: [id])
-  createdAt     DateTime       @default(now())
-  @@map("stock_transfers")
 }
 
 model PartUsage {
   id          String       @id @default(uuid())
-  quantity    Int
-  costPrice   Decimal      @db.Decimal(12, 2)
-  salePrice   Decimal      @db.Decimal(12, 2)
   partId      String
   part        Part         @relation(fields: [partId], references: [id])
   orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  @@map("part_usages")
+  order       ServiceOrder @relation(fields: [orderId], references: [id])
 }
 
 model ChecklistItem {
   id          String       @id @default(uuid())
-  item        String
-  checked     Boolean      @default(false)
   orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  @@map("checklist_items")
+  order       ServiceOrder @relation(fields: [orderId], references: [id])
 }
 
 model Photo {
   id          String       @id @default(uuid())
-  url         String
   orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order       ServiceOrder @relation(fields: [orderId], references: [id])
   internalOrderId String?
   internalOrder   ServiceOrder? @relation("InternalPhotos", fields: [internalOrderId], references: [id])
-  @@map("photos")
 }
 
 model TimeEntry {
   id           String       @id @default(uuid())
-  startTime    DateTime
-  endTime      DateTime?
   technicianId String
   technician   User         @relation(fields: [technicianId], references: [id])
   orderId      String
-  order        ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  @@map("time_entries")
+  order       ServiceOrder @relation(fields: [orderId], references: [id])
 }
 
 model QAResult {
   id          String       @id @default(uuid())
-  passed      Boolean
   orderId     String       @unique
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  @@map("qa_results")
+  order       ServiceOrder @relation(fields: [orderId], references: [id])
 }
 
 model Commission {
   id              String           @id @default(uuid())
   orderId         String           @unique
   order           ServiceOrder     @relation(fields: [orderId], references: [id])
-  amount          Decimal          @db.Decimal(12, 2)
-  status          CommissionStatus @default(PENDIENTE)
-  technicianId    String
-  technician      User             @relation(fields: [technicianId], references: [id])
-  debits          TechnicianDebit[]
-  createdAt       DateTime         @default(now())
-  @@map("commissions")
-}
-
-model TechnicianDebit {
-  id              String       @id @default(uuid())
-  commissionId    String
-  commission      Commission   @relation(fields: [commissionId], references: [id])
-  reason          DebitReason
-  amount          Decimal      @db.Decimal(12, 2)
-  technicianId    String
-  technician      User         @relation(fields: [technicianId], references: [id])
-  createdAt       DateTime     @default(now())
-  @@map("technician_debits")
 }
 
 model SafeKit {
   id              String          @id @default(uuid())
   code            String          @unique
-  qrCode          String
   storeId         String
   store           Store           @relation(fields: [storeId], references: [id])
   currentOrder    ServiceOrder?
-  @@map("safe_kits")
 }
 
 model Invoice {
   id              String         @id @default(uuid())
-  invoiceNumber   String         @unique
-  total           Decimal        @db.Decimal(12, 2)
-  customerId      String
-  customer        Customer       @relation(fields: [customerId], references: [id])
-  storeId         String
-  store           Store          @relation(fields: [storeId], references: [id])
   orderId         String?        @unique
   order           ServiceOrder?  @relation(fields: [orderId], references: [id])
-  createdAt       DateTime       @default(now())
-  @@map("invoices")
 }
 
 model WarrantyClaim {
   id              String         @id @default(uuid())
-  status          WarrantyStatus @default(PENDIENTE)
   originalOrderId String         @unique
   originalOrder   ServiceOrder   @relation(fields: [originalOrderId], references: [id])
-  storeId         String
-  store           Store          @relation(fields: [storeId], references: [id])
-  cause           WarrantyCause
-  createdAt       DateTime       @default(now())
-  @@map("warranty_claims")
-}
-
-model CashRegister {
-  id              String           @id @default(uuid())
-  status          RegisterStatus
-  storeId         String
-  store           Store            @relation(fields: [storeId], references: [id])
-  openedById      String
-  openedBy        User             @relation(fields: [openedById], references: [id])
-  openedAt        DateTime         @default(now())
-  @@map("cash_registers")
-}
-
-model AuditLog {
-  id          String    @id @default(uuid())
-  action      String
-  entityType  String
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  timestamp   DateTime  @default(now())
-  @@map("audit_logs")
-}
-
-model FixedExpense {
-  id          String          @id @default(uuid())
-  name        String
-  amount      Decimal         @db.Decimal(12, 2)
-  category    ExpenseCategory
-  storeId     String
-  store       Store           @relation(fields: [storeId], references: [id])
-  @@map("fixed_expenses")
-}
-
-model DailyTarget {
-  id              String    @id @default(uuid())
-  date            DateTime
-  targetAmount    Decimal    @db.Decimal(12, 2)
-  storeId         String
-  store           Store      @relation(fields: [storeId], references: [id])
-  @@unique([date, storeId])
-  @@map("daily_targets")
-}
-
-model CourtesyDevice {
-  id            String       @id @default(uuid())
-  model         String
-  storeId       String
-  store         Store        @relation(fields: [storeId], references: [id])
-  @@map("courtesy_devices")
-}
-
-model DeviceLoan {
-  id                 String         @id @default(uuid())
-  customerId         String
-  customer           Customer       @relation(fields: [customerId], references: [id])
-  @@map("device_loans")
-}
-
-model DeliveryRequest {
-  id              String    @id @default(uuid())
-  customerId      String
-  customer        Customer  @relation(fields: [customerId], references: [id])
-  status          String    @default("pending")
-  @@map("delivery_requests")
 }
