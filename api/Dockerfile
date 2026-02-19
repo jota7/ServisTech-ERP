@@ -64,7 +64,7 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN apk add --no-cache \
     chromium \
     nss \
-    freebtype \
+    freetype \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
