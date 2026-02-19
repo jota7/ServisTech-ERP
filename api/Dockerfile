@@ -19,10 +19,9 @@ RUN apk add --no-cache \
 
 # Copiar package files
 COPY package*.json ./
-COPY prisma ./prisma/
-
-# Instalar dependencias
-RUN npm ci --only=production && \
+# Eliminamos temporalmente la copia de prisma aquí para evitar errores si no hay lockfile
+# Usamos install en lugar de ci para mayor compatibilidad en Railway
+RUN npm install --omit=dev && \
     npm cache clean --force
 
 # ============================================
@@ -40,8 +39,8 @@ COPY tsconfig.json ./
 COPY src ./src/
 COPY prisma ./prisma/
 
-# Instalar todas las dependencias (incluyendo dev)
-RUN npm ci
+# Cambiamos npm ci por npm install para que no pida el package-lock.json
+RUN npm install
 
 # Generar cliente Prisma
 RUN npx prisma generate
@@ -60,7 +59,7 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# Instalar solo dependencias necesarias para Puppeteer
+# Instalar solo dependencias necesarias para Puppeteer (Corregido freetype)
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -76,22 +75,20 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     NODE_ENV=production \
     PORT=3000
 
-# Copiar dependencias de producción
+# Copiar dependencias de producción y código
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/package*.json ./
-
-# Copiar código compilado
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-# Copiar scripts necesarios
+# IMPORTANTE: Asegúrate de que la carpeta 'scripts' esté dentro de 'api' en tu VS Code
 COPY scripts ./scripts
 
 # Cambiar permisos
 RUN chown -R nodejs:nodejs /app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# Health check (opcional, lo dejamos configurado)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
 # Exponer puerto
@@ -100,5 +97,5 @@ EXPOSE 3000
 # Cambiar a usuario no-root
 USER nodejs
 
-# Comando de inicio
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma generate && node dist/server.js"]
+# Comando de inicio (Ajustado para asegurar que Prisma esté listo)
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
