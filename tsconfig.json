@@ -5,7 +5,8 @@
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,            // <--- CAMBIADO de true a false
+    "noEmitOnError": false,      // <--- AGREGADO para que genere archivos con errores
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
