@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc --noEmitOnError false || exit 0",
+    "build": "prisma generate && tsc --noEmitOnError false || exit 0",
     "start": "node dist/server.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -13,7 +13,11 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts"
   },
-  "keywords": ["erp", "servistech", "api"],
+  "keywords": [
+    "erp",
+    "servistech",
+    "api"
+  ],
   "author": "SERVISTECH",
   "license": "MIT",
   "dependencies": {

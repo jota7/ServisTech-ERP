@@ -6,14 +6,14 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import cron from 'node-cron';
 
-// Load environment variables
+// Cargar variables de entorno
 dotenv.config();
 
 import { logger } from '@/utils/logger';
 import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
 import { bcvScraper } from '@/services/bcvScraper';
 
-// Import routes
+// Importar rutas
 import authRoutes from '@/routes/authRoutes';
 import userRoutes from '@/routes/userRoutes';
 import customerRoutes from '@/routes/customerRoutes';
@@ -26,28 +26,31 @@ import dashboardRoutes from '@/routes/dashboardRoutes';
 import bcvRoutes from '@/routes/bcvRoutes';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Security middleware
+// Configuración de Puerto y Host para Railway
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = '0.0.0.0'; 
+
+// Middleware de seguridad
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// CORS
+// CORS mejorado
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || '*', // Permite todo si no hay URL definida
   credentials: true,
 }));
 
-// Rate limiting
+// Limitador de peticiones general
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, 
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use(limiter);
 
-// Stricter rate limit for auth endpoints
+// Límite estricto para Login (Seguridad de ServisTech)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -55,27 +58,30 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 
-// Body parsing
+// Parsing de cuerpos (Ajustado para fotos de reparaciones)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging
+// Logging de peticiones
 app.use(morgan('combined', {
   stream: {
     write: (message) => logger.info(message.trim()),
   },
 }));
 
-// Health check
+// ==========================================
+// RUTA DE SALUD (VITAL PARA RAILWAY)
+// ==========================================
 app.get('/health', (_req, res) => {
-  res.json({
+  res.status(200).json({
     status: 'ok',
+    service: 'ServisTech ERP API',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    uptime: process.uptime()
   });
 });
 
-// API Routes
+// Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
@@ -87,27 +93,34 @@ app.use('/api/stores', storeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/bcv', bcvRoutes);
 
-// 404 handler
+// Manejador de rutas no encontradas
 app.use(notFoundHandler);
 
-// Error handler
+// Manejador de errores global
 app.use(errorHandler);
 
-// BCV Scraper Cron Job (runs daily at 8 AM)
+// Tarea programada BCV (Solo si está habilitado)
 if (process.env.BCV_SCRAPER_ENABLED === 'true') {
   cron.schedule(process.env.BCV_SCRAPER_CRON || '0 8 * * *', async () => {
     logger.info('Running BCV scraper cron job...');
-    await bcvScraper.updateRate();
+    try {
+      await bcvScraper.updateRate();
+    } catch (error) {
+      logger.error('Error in BCV scraper cron job:', error);
+    }
   });
   
   logger.info('BCV scraper cron job scheduled');
 }
 
-// Start server
-app.listen(PORT, () => {
-  logger.info(`🚀 SERVISTECH API running on port ${PORT}`);
-  logger.info(`📚 API Documentation: http://localhost:${PORT}/health`);
-  logger.info(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+// ==========================================
+// ARRANQUE DEL SERVIDOR
+// ==========================================
+app.listen(PORT, HOST, () => {
+  logger.info(`🚀 SERVISTECH API is live!`);
+  logger.info(`📡 URL: http://${HOST}:${PORT}`);
+  logger.info(`✅ Health Check: http://${HOST}:${PORT}/health`);
+  logger.info(`🔧 Mode: ${process.env.NODE_ENV || 'development'}`);
 });
 
 export default app;
