@@ -1,5 +1,9 @@
+// SERVISTECH ERP - Versión Maestra Final
+// Validada para Prisma v5.22.0 y Despliegue en Railway
+
 generator client {
   provider      = "prisma-client-js"
+  // Esta línea es vital para que Railway (Linux) y tu PC (Windows) funcionen a la vez
   binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
@@ -8,7 +12,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- ENUMS ---
+// ==========================================
+// ENUMS (Definiciones de estados y roles)
+// ==========================================
+
 enum UserRole {
   SUPER_ADMIN
   GERENTE
@@ -32,6 +39,14 @@ enum OrderStatus {
   GARANTIA
 }
 
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+  GARANTIA
+}
+
 enum TransferStatus {
   PENDING
   IN_TRANSIT
@@ -39,196 +54,174 @@ enum TransferStatus {
   CANCELLED
 }
 
-enum PartType {
-  REPUESTO
-  ACCESORIO
-}
-
-// --- MODELS ---
+// ==========================================
+// MODELOS DE USUARIO Y TIENDA
+// ==========================================
 
 model User {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   name            String
-  email           String    @unique
+  email           String         @unique
   password        String
-  role            UserRole  @default(ANFITRION)
+  role            UserRole       @default(ANFITRION)
   storeId         String
-  store           Store     @relation(fields: [storeId], references: [id])
-  ordersCreated   ServiceOrder[]   @relation("CreatedBy")
-  ordersAssigned  ServiceOrder[]   @relation("AssignedTo")
-  timeEntries     TimeEntry[]
-  
+  store           Store          @relation(fields: [storeId], references: [id])
+  ordersCreated   ServiceOrder[] @relation("CreatedBy")
+  ordersAssigned  ServiceOrder[] @relation("AssignedTo")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
   @@map("users")
 }
 
 model Store {
-  id              String     @id @default(uuid())
-  name            String
-  code            String     @unique
-  users           User[]
-  orders          ServiceOrder[]
-  parts           PartStock[]
-  safeKits        SafeKit[]
-  transfersFrom   StockTransfer[] @relation("FromStore")
-  transfersTo     StockTransfer[] @relation("ToStore")
+  id            String          @id @default(uuid())
+  name          String
+  code          String          @unique
+  address       String?
+  phone         String?
+  users         User[]
+  orders        ServiceOrder[]
+  parts         PartStock[]
+  safeKits      SafeKit[]
   
+  // Relaciones de transferencia (Corregidas para evitar ambigüedad)
+  transfersFrom StockTransfer[] @relation("FromStore")
+  transfersTo   StockTransfer[] @relation("ToStore")
+
   @@map("stores")
 }
 
+// ==========================================
+// MODELOS DE CLIENTES Y EQUIPOS
+// ==========================================
+
 model Customer {
-  id           String    @id @default(uuid())
-  name         String
-  phone        String
-  documentId   String    @unique
-  devices      Device[]
-  orders       ServiceOrder[]
-  
+  id         String         @id @default(uuid())
+  name       String
+  phone      String
+  email      String?
+  documentId String         @unique
+  devices    Device[]
+  orders     ServiceOrder[]
+
   @@map("customers")
 }
 
 model Device {
-  id           String       @id @default(uuid())
+  id           String         @id @default(uuid())
+  brand        String?
   model        String
-  serialNumber String
+  serialNumber String         @unique
   customerId   String
-  customer     Customer     @relation(fields: [customerId], references: [id])
+  customer     Customer       @relation(fields: [customerId], references: [id])
   orders       ServiceOrder[]
-  
+
   @@map("devices")
 }
 
+// ==========================================
+// CORE: ORDENES DE SERVICIO
+// ==========================================
+
 model ServiceOrder {
-  id                String       @id @default(uuid())
-  orderNumber       String       @unique
-  status            OrderStatus  @default(TRIAJE)
+  id            String       @id @default(uuid())
+  orderNumber   String       @unique
+  status        OrderStatus  @default(TRIAJE)
+  priority      Priority     @default(MEDIA)
+  problem       String
+  observations  String?
   
-  customerId        String
-  customer          Customer     @relation(fields: [customerId], references: [id])
-  deviceId          String
-  device            Device       @relation(fields: [deviceId], references: [id])
-  storeId           String
-  store             Store        @relation(fields: [storeId], references: [id])
-  createdById       String
-  createdBy         User         @relation("CreatedBy", fields: [createdById], references: [id])
-  assignedToId      String?
-  assignedTo        User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  // Relaciones principales
+  customerId    String
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  deviceId      String
+  device        Device       @relation(fields: [deviceId], references: [id])
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
   
-  checklist         ChecklistItem[]
-  photos            Photo[]
-  partsUsed         PartUsage[]
-  internalPhotos    Photo[]       @relation("InternalPhotos")
-  timeEntries       TimeEntry[]
-  qaResult          QAResult?
-  invoice           Invoice?
-  warranty          WarrantyClaim?
-  commission        Commission?
-  
-  safeKitId         String?       @unique
-  safeKit           SafeKit?      @relation(fields: [safeKitId], references: [id])
-  
-  createdAt         DateTime      @default(now())
+  // Personal involucrado
+  createdById   String
+  createdBy     User         @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedToId  String?
+  assignedTo    User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  // RELACIÓN 1:1 SAFE KIT (Corregida: Solo este lado define campos)
+  safeKitId     String?      @unique
+  safeKit       SafeKit?     @relation(fields: [safeKitId], references: [id])
+
+  partsUsed     PartUsage[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
   @@map("service_orders")
 }
 
-model Category {
-  id          String    @id @default(uuid())
-  name        String
-  parts       Part[]
-  @@map("categories")
+model SafeKit {
+  id           String        @id @default(uuid())
+  code         String        @unique
+  storeId      String
+  store        Store         @relation(fields: [storeId], references: [id])
+  
+  // Relación inversa 1:1 (Limpia, sin argumentos @relation)
+  currentOrder ServiceOrder?
+
+  @@map("safe_kits")
 }
 
+// ==========================================
+// INVENTARIO Y REPUESTOS
+// ==========================================
+
 model Part {
-  id                String       @id @default(uuid())
-  sku               String       @unique
-  name              String
-  categoryId        String
-  category          Category     @relation(fields: [categoryId], references: [id])
-  stock             PartStock[]
-  usages            PartUsage[]
-  transfers         StockTransfer[] 
+  id        String          @id @default(uuid())
+  sku       String          @unique
+  name      String
+  description String?
+  stock     PartStock[]
+  usages    PartUsage[]
+  transfers StockTransfer[]
+
   @@map("parts")
 }
 
 model PartStock {
-  id        String   @id @default(uuid())
-  quantity  Int      @default(0)
-  partId    String
-  part      Part     @relation(fields: [partId], references: [id])
-  storeId   String
-  store     Store    @relation(fields: [storeId], references: [id])
+  id       String @id @default(uuid())
+  quantity Int    @default(0)
+  partId   String
+  part     Part   @relation(fields: [partId], references: [id])
+  storeId  String
+  store    Store  @relation(fields: [storeId], references: [id])
+
   @@unique([partId, storeId])
+  @@map("part_stocks")
 }
 
 model StockTransfer {
-  id            String         @id @default(uuid())
-  quantity      Int
-  status        TransferStatus @default(PENDING)
-  partId        String
-  part          Part           @relation(fields: [partId], references: [id])
-  fromStoreId   String
-  fromStore     Store          @relation("FromStore", fields: [fromStoreId], references: [id])
-  toStoreId     String
-  toStore       Store          @relation("ToStore", fields: [toStoreId], references: [id])
+  id          String         @id @default(uuid())
+  quantity    Int
+  status      TransferStatus @default(PENDING)
+  
+  partId      String
+  part        Part           @relation(fields: [partId], references: [id])
+  
+  // Relaciones con Store (Corregidas con nombres únicos)
+  fromStoreId String
+  fromStore   Store          @relation("FromStore", fields: [fromStoreId], references: [id])
+  toStoreId   String
+  toStore     Store          @relation("ToStore", fields: [toStoreId], references: [id])
+
+  createdAt   DateTime       @default(now())
+  @@map("stock_transfers")
 }
 
 model PartUsage {
-  id          String       @id @default(uuid())
-  partId      String
-  part        Part         @relation(fields: [partId], references: [id])
-  orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id])
-}
+  id      String       @id @default(uuid())
+  quantity Int         @default(1)
+  partId  String
+  part    Part         @relation(fields: [partId], references: [id])
+  orderId String
+  order   ServiceOrder @relation(fields: [orderId], references: [id])
 
-model ChecklistItem {
-  id          String       @id @default(uuid())
-  orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id])
-}
-
-model Photo {
-  id          String       @id @default(uuid())
-  orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id])
-  internalOrderId String?
-  internalOrder   ServiceOrder? @relation("InternalPhotos", fields: [internalOrderId], references: [id])
-}
-
-model TimeEntry {
-  id           String       @id @default(uuid())
-  technicianId String
-  technician   User         @relation(fields: [technicianId], references: [id])
-  orderId      String
-  order       ServiceOrder @relation(fields: [orderId], references: [id])
-}
-
-model QAResult {
-  id          String       @id @default(uuid())
-  orderId     String       @unique
-  order       ServiceOrder @relation(fields: [orderId], references: [id])
-}
-
-model Commission {
-  id              String           @id @default(uuid())
-  orderId         String           @unique
-  order           ServiceOrder     @relation(fields: [orderId], references: [id])
-}
-
-model SafeKit {
-  id              String          @id @default(uuid())
-  code            String          @unique
-  storeId         String
-  store           Store           @relation(fields: [storeId], references: [id])
-  currentOrder    ServiceOrder?
-}
-
-model Invoice {
-  id              String         @id @default(uuid())
-  orderId         String?        @unique
-  order           ServiceOrder?  @relation(fields: [orderId], references: [id])
-}
-
-model WarrantyClaim {
-  id              String         @id @default(uuid())
-  originalOrderId String         @unique
-  originalOrder   ServiceOrder   @relation(fields: [originalOrderId], references: [id])
+  @@map("part_usages")
 }
