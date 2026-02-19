@@ -13,6 +13,7 @@
       "build": {
         "builder": "DOCKERFILE",
         "dockerfilePath": "api/Dockerfile"
+        "context": "."
       },
       "deploy": {
         "startCommand": "npm start",
