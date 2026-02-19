@@ -1,30 +1,28 @@
-# Build stage
+# 1. Etapa de Construcción (Builder)
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copiar archivos de configuración
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
+# Instalar TODAS las dependencias
 RUN npm ci
 
-# Copy source code
+# Copiar el código fuente y generar cliente de Prisma
 COPY . .
-
-# Generate Prisma client
 RUN npx prisma generate
 
-# Build TypeScript
+# Compilar TypeScript
 RUN npm run build
 
-# Production stage
+# 2. Etapa de Producción (Final)
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install Puppeteer dependencies
+# Instalar dependencias para el Scraper de ServisTech (Puppeteer)
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -34,32 +32,28 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
+# Configuración de Puppeteer y Entorno
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production \
+    PORT=3000
 
-# Copy package files
+# Copiar archivos esenciales
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install production dependencies only
+# Instalar solo dependencias de producción y generar cliente
 RUN npm ci --only=production
-
-# Generate Prisma client
 RUN npx prisma generate
 
-# Copy built files from builder
+# Copiar los archivos compilados desde el builder
 COPY --from=builder /app/dist ./dist
 
-# Create logs directory
+# Crear carpeta de logs
 RUN mkdir -p logs
 
-# Expose port
+# Exponer el puerto
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
-
-# Start command
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/server.js"]
+# ARRANQUE DIRECTO: Sin migraciones ni seeds que bloqueen el inicio
+CMD ["node", "dist/server.js"]
