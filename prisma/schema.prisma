@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- ENUMS ---
+// ==================== ENUMS ====================
 enum UserRole {
   SUPER_ADMIN
   GERENTE
@@ -32,6 +32,14 @@ enum OrderStatus {
   GARANTIA
 }
 
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+  GARANTIA
+}
+
 enum TransferStatus {
   PENDING
   IN_TRANSIT
@@ -39,131 +47,146 @@ enum TransferStatus {
   CANCELLED
 }
 
-// --- MODELOS ---
+// ==================== MODELOS ====================
 
 model User {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   name            String
-  email           String    @unique
+  email           String         @unique
   password        String
-  role            UserRole  @default(ANFITRION)
+  role            UserRole       @default(ANFITRION)
   storeId         String
-  store           Store     @relation(fields: [storeId], references: [id])
-  ordersCreated   ServiceOrder[]   @relation("CreatedBy")
-  ordersAssigned  ServiceOrder[]   @relation("AssignedTo")
-  
+  store           Store          @relation(fields: [storeId], references: [id])
+  ordersCreated   ServiceOrder[] @relation("CreatedBy")
+  ordersAssigned  ServiceOrder[] @relation("AssignedTo")
+  createdAt       DateTime       @default(now())
+
   @@map("users")
 }
 
 model Store {
-  id              String     @id @default(uuid())
-  name            String
-  code            String     @unique
-  users           User[]
-  orders          ServiceOrder[]
-  parts           PartStock[]
-  safeKits        SafeKit[]
-  transfersFrom   StockTransfer[] @relation("FromStore")
-  transfersTo     StockTransfer[] @relation("ToStore")
+  id            String          @id @default(uuid())
+  name          String
+  code          String          @unique
+  users         User[]
+  orders        ServiceOrder[]
+  parts         PartStock[]
+  safeKits      SafeKit[]
   
+  transfersFrom StockTransfer[] @relation("FromStore")
+  transfersTo   StockTransfer[] @relation("ToStore")
+
   @@map("stores")
 }
 
 model Customer {
-  id           String    @id @default(uuid())
-  name         String
-  phone        String
-  documentId   String    @unique
-  devices      Device[]
-  orders       ServiceOrder[]
-  
+  id         String         @id @default(uuid())
+  name       String
+  phone      String
+  documentId String         @unique
+  devices    Device[]
+  orders     ServiceOrder[]
+
   @@map("customers")
 }
 
 model Device {
-  id           String       @id @default(uuid())
+  id           String         @id @default(uuid())
   model        String
-  serialNumber String       @unique
+  serialNumber String         @unique
   customerId   String
-  customer     Customer     @relation(fields: [customerId], references: [id])
+  customer     Customer       @relation(fields: [customerId], references: [id])
   orders       ServiceOrder[]
-  
+
   @@map("devices")
 }
 
 model ServiceOrder {
-  id                String       @id @default(uuid())
-  orderNumber       String       @unique
-  status            OrderStatus  @default(TRIAJE)
+  id            String       @id @default(uuid())
+  orderNumber   String       @unique
+  status        OrderStatus  @default(TRIAJE)
+  priority      Priority     @default(MEDIA)
   
-  customerId        String
-  customer          Customer     @relation(fields: [customerId], references: [id])
-  deviceId          String
-  device            Device       @relation(fields: [deviceId], references: [id])
-  storeId           String
-  store             Store        @relation(fields: [storeId], references: [id])
-  createdById       String
-  createdBy         User         @relation("CreatedBy", fields: [createdById], references: [id])
-  assignedToId      String?
-  assignedTo        User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  customerId    String
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  deviceId      String
+  device        Device       @relation(fields: [deviceId], references: [id])
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
   
-  // RELACIÓN 1:1 CORREGIDA: Solo este lado define fields y references
-  safeKitId         String?      @unique
-  safeKit           SafeKit?     @relation(fields: [safeKitId], references: [id])
-  
-  partsUsed         PartUsage[]
-  createdAt         DateTime      @default(now())
+  createdById   String
+  createdBy     User         @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedToId  String?
+  assignedTo    User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  // RELACIÓN 1:1 CORREGIDA
+  safeKitId     String?      @unique
+  safeKit       SafeKit?     @relation(fields: [safeKitId], references: [id])
+
+  partsUsed     PartUsage[]
+  createdAt     DateTime     @default(now())
+
   @@map("service_orders")
 }
 
 model SafeKit {
-  id              String          @id @default(uuid())
-  code            String          @unique
-  storeId         String
-  store           Store           @relation(fields: [storeId], references: [id])
+  id           String        @id @default(uuid())
+  code         String        @unique
+  storeId      String
+  store         Store        @relation(fields: [storeId], references: [id])
   
-  // RELACIÓN 1:1 CORREGIDA: Sin argumentos redundantes
-  currentOrder    ServiceOrder?
+  currentOrder ServiceOrder?
 
   @@map("safe_kits")
 }
 
 model Part {
-  id                String       @id @default(uuid())
-  sku               String       @unique
-  name              String
-  stock             PartStock[]
-  usages            PartUsage[]
-  transfers         StockTransfer[] 
+  id        String          @id @default(uuid())
+  sku       String          @unique
+  name      String
+  stock     PartStock[]
+  usages    PartUsage[]
+  transfers StockTransfer[]
+
   @@map("parts")
 }
 
 model PartStock {
-  id        String   @id @default(uuid())
-  quantity  Int      @default(0)
-  partId    String
-  part      Part     @relation(fields: [partId], references: [id])
-  storeId   String
-  store     Store    @relation(fields: [storeId], references: [id])
+  id       String @id @default(uuid())
+  quantity Int    @default(0)
+  partId   String
+  part     Part   @relation(fields: [partId], references: [id])
+  storeId  String
+  store    Store  @relation(fields: [storeId], references: [id])
+
   @@unique([partId, storeId])
+  @@map("part_stocks")
 }
 
 model StockTransfer {
-  id            String         @id @default(uuid())
-  quantity      Int
-  status        TransferStatus @default(PENDING)
-  partId        String
-  part          Part           @relation(fields: [partId], references: [id])
-  fromStoreId   String
-  fromStore     Store          @relation("FromStore", fields: [fromStoreId], references: [id])
-  toStoreId     String
-  toStore       Store          @relation("ToStore", fields: [toStoreId], references: [id])
+  id          String         @id @default(uuid())
+  quantity    Int
+  status      TransferStatus @default(PENDING)
+  
+  partId      String
+  part        Part           @relation(fields: [partId], references: [id])
+  
+  fromStoreId String
+  fromStore   Store          @relation("FromStore", fields: [fromStoreId], references: [id])
+  
+  toStoreId   String
+  toStore     Store          @relation("ToStore", fields: [toStoreId], references: [id])
+
+  createdAt   DateTime       @default(now())
+  @@map("stock_transfers")
 }
 
 model PartUsage {
-  id          String       @id @default(uuid())
-  partId      String
-  part        Part         @relation(fields: [partId], references: [id])
-  orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id])
+  id      String       @id @default(uuid())
+  partId  String
+  part    Part         @relation(fields: [partId], references: [id])
+  orderId String
+  order   ServiceOrder @relation(fields: [orderId], references: [id])
+
+  @@map("part_usages")
 }
