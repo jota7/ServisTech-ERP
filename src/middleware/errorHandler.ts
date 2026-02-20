@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
-import { errorResponse } from '@/utils/response';
-import { logger } from '@/utils/logger';
+
+// Nota: Asegúrate de tener estos archivos en utils/ o el servidor fallará
+// Si no los tienes, dime y te los genero.
+import { errorResponse } from '../utils/response'; 
+import { logger } from '../utils/logger';
 
 export class AppError extends Error {
   statusCode: number;
@@ -16,10 +19,10 @@ export class AppError extends Error {
 }
 
 export const errorHandler = (
-  err: Error,
+  err: any,
   req: Request,
   res: Response,
-  _next: NextFunction
+  next: NextFunction // No quitar este parámetro
 ): void => {
   // Log error
   logger.error({
@@ -27,60 +30,34 @@ export const errorHandler = (
     stack: err.stack,
     url: req.url,
     method: req.method,
-    body: req.body,
-    user: req.user?.id,
   });
 
-  // Handle Prisma errors
+  // Prisma Errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    // Unique constraint violation
     if (err.code === 'P2002') {
-      const field = (err.meta?.target as string[])?.[0];
-      errorResponse(res, `${field || 'Field'} already exists`, 409);
+      errorResponse(res, `El dato ya existe en el sistema`, 409);
       return;
     }
-    
-    // Foreign key constraint
-    if (err.code === 'P2003') {
-      errorResponse(res, 'Referenced record not found', 404);
-      return;
-    }
-    
-    // Record not found
     if (err.code === 'P2025') {
-      errorResponse(res, 'Record not found', 404);
+      errorResponse(res, 'Registro no encontrado', 404);
       return;
     }
   }
 
-  // Handle validation errors
-  if (err instanceof Prisma.PrismaClientValidationError) {
-    errorResponse(res, 'Invalid data provided', 400);
-    return;
-  }
-
-  // Handle AppError (operational errors)
   if (err instanceof AppError) {
     errorResponse(res, err.message, err.statusCode);
     return;
   }
 
-  // Default error response
   const message = process.env.NODE_ENV === 'production' 
-    ? 'Internal server error' 
+    ? 'Error interno del servidor' 
     : err.message;
     
   errorResponse(res, message, 500);
 };
 
-// Async handler wrapper
 export const asyncHandler = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
-};
-
-// 404 handler
-export const notFoundHandler = (req: Request, res: Response): void => {
-  errorResponse(res, `Route ${req.originalUrl} not found`, 404);
 };

@@ -1,44 +1,15 @@
-import winston from 'winston';
-
-const { combine, timestamp, json, errors, printf, colorize } = winston.format;
-
-// Custom format for development
-const devFormat = printf(({ level, message, timestamp, ...metadata }) => {
-  let msg = `${timestamp} [${level}]: ${message}`;
-  if (Object.keys(metadata).length > 0) {
-    msg += ` ${JSON.stringify(metadata)}`;
+/**
+ * Sistema de Logs para ServisTech
+ * Registra eventos, errores y auditoría del soporte técnico.
+ */
+export const logger = {
+  info: (msg: any, context: any = '') => {
+    console.log(`\x1b[32m[INFO]\x1b[0m ${new Date().toLocaleString()}:`, msg, context);
+  },
+  error: (msg: any, context: any = '') => {
+    console.error(`\x1b[31m[ERROR]\x1b[0m ${new Date().toLocaleString()}:`, msg, context);
+  },
+  warn: (msg: any, context: any = '') => {
+    console.warn(`\x1b[33m[WARN]\x1b[0m ${new Date().toLocaleString()}:`, msg, context);
   }
-  return msg;
-});
-
-export const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  defaultMeta: { service: 'servistech-api' },
-  transports: [
-    // Console output
-    new winston.transports.Console({
-      format: combine(
-        colorize(),
-        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        process.env.NODE_ENV === 'production' ? json() : devFormat
-      ),
-    }),
-    // File output for errors
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: combine(timestamp(), json()),
-    }),
-    // File output for all logs
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: combine(timestamp(), json()),
-    }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({ filename: 'logs/rejections.log' }),
-  ],
-});
+};
