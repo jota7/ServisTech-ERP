@@ -22,9 +22,14 @@ router.get('/auth/me', authController.getMe);
  * Ejemplo: router.use('/reparaciones', reparacionRoutes);
  */
 
-// Ruta de prueba para verificar que el sistema de rutas responde
+// Ruta de prueba (Ping)
 router.get('/ping', (req, res) => {
   res.json({ message: 'Pong! El sistema de rutas de ServisTech funciona correctamente.' });
+});
+
+// NUEVO: Ruta Healthcheck obligatoria para Railway y Docker
+router.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'ServisTech API is healthy and running!' });
 });
 
 export default router;
