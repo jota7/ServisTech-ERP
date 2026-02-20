@@ -1,35 +1,36 @@
 import { Router } from 'express';
-// Importamos el controlador de autenticación que ya verificamos
-import * as authController from '../controllers/authController';
+import authRoutes from './authRoutes';
+import inventoryRoutes from './inventoryRoutes';
+import invoiceRoutes from './invoiceRoutes';
+import orderRoutes from './orderRoutes';
+import storeRoutes from './storeRoutes';
+import userRoutes from './userRoutes';
+import customerRoutes from './customerRoutes';
+import bcvRoutes from './bcvRoutes';
+import dashboardRoutes from './dashboardRoutes';
+import cashRegisterRoutes from './cashRegisterRoutes';
 
 const router = Router();
 
-/**
- * 🔐 RUTAS DE AUTENTICACIÓN
- * Estas rutas permiten el ingreso de los técnicos de ServisTech al sistema
- */
-
-// Ruta para iniciar sesión (POST /api/auth/login)
-router.post('/auth/login', authController.login);
-
-// Ruta para obtener datos del usuario actual (GET /api/auth/me)
-router.get('/auth/me', authController.getMe);
-
-
-/**
- * 📱 FUTURAS RUTAS DE SERVISTECH
- * Aquí es donde añadirás las rutas para clientes, reparaciones y equipos
- * Ejemplo: router.use('/reparaciones', reparacionRoutes);
- */
-
-// Ruta de prueba (Ping)
-router.get('/ping', (req, res) => {
-  res.json({ message: 'Pong! El sistema de rutas de ServisTech funciona correctamente.' });
-});
-
-// NUEVO: Ruta Healthcheck obligatoria para Railway y Docker
+// ==========================================
+// 🏥 HEALTHCHECK (Vital para Railway)
+// ==========================================
 router.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'ServisTech API is healthy and running!' });
 });
+
+// ==========================================
+// 🔌 CONEXIÓN DE MÓDULOS DE SERVISTECH
+// ==========================================
+router.use('/auth', authRoutes);
+router.use('/inventory', inventoryRoutes);
+router.use('/invoices', invoiceRoutes);
+router.use('/orders', orderRoutes);
+router.use('/stores', storeRoutes);
+router.use('/users', userRoutes);
+router.use('/customers', customerRoutes);
+router.use('/bcv', bcvRoutes);
+router.use('/dashboard', dashboardRoutes);
+router.use('/cash-register', cashRegisterRoutes);
 
 export default router;

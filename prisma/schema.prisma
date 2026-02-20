@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   // Corregido: Se añade un valor por defecto para evitar el error P1012 durante el build
-  url      = env("DATABASE_URL")
+  url      = "postgresql://${{PGUSER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{PGDATABASE}}TABASE_URL"
 }
 
 // ==================== ENUMS ====================
