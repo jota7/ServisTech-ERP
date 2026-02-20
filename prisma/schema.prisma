@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Corregido: Se añade un valor por defecto para evitar el error P1012 durante el build
   url      = env("DATABASE_URL")
 }
 
@@ -86,18 +87,18 @@ enum RegisterStatus {
 // ==================== MODELS ====================
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole @default(ANFITRION)
-  isActive  Boolean  @default(true)
-  avatar    String?
-  storeId   String?
-  store     Store?   @relation(fields: [storeId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lastLogin DateTime?
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  password        String
+  role            UserRole       @default(ANFITRION)
+  isActive        Boolean        @default(true)
+  avatar          String?
+  storeId         String?
+  store           Store?         @relation(fields: [storeId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  lastLogin       DateTime?
   ordersCreated   ServiceOrder[] @relation("CreatedBy")
   ordersAssigned  ServiceOrder[] @relation("AssignedTo")
   timeEntries     TimeEntry[]
@@ -107,28 +108,28 @@ model User {
 }
 
 model Store {
-  id              String         @id @default(uuid())
-  name            String
-  code            String         @unique
-  address         String
-  phone           String
-  email           String
-  logo            String?
-  isActive        Boolean        @default(true)
-  rif             String?
-  razonSocial     String?
-  direccionFiscal String?
-  users           User[]
-  orders          ServiceOrder[]
-  parts           PartStock[]
-  cashRegisters   CashRegister[]
-  safeKits        SafeKit[]
-  courtesyDevices CourtesyDevice[]
-  invoices        Invoice[]
-  transfersFrom   StockTransfer[] @relation("FromTransfer")
-  transfersTo     StockTransfer[] @relation("ToTransfer")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id               String           @id @default(uuid())
+  name             String
+  code             String           @unique
+  address          String
+  phone            String
+  email            String
+  logo             String?
+  isActive         Boolean          @default(true)
+  rif              String?
+  razonSocial      String?
+  direccionFiscal  String?
+  users            User[]
+  orders           ServiceOrder[]
+  parts            PartStock[]
+  cashRegisters    CashRegister[]
+  safeKits         SafeKit[]
+  courtesyDevices  CourtesyDevice[]
+  invoices         Invoice[]
+  transfersFrom    StockTransfer[]  @relation("FromTransfer")
+  transfersTo      StockTransfer[]  @relation("ToTransfer")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   @@map("stores")
 }
 
@@ -143,18 +144,18 @@ model BCVRate {
 }
 
 model Customer {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   name        String
   email       String?
   phone       String
-  documentId  String   @unique
+  documentId  String         @unique
   address     String?
   devices     Device[]
   orders      ServiceOrder[]
   invoices    Invoice[]
   loans       DeviceLoan[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   @@map("customers")
 }
 
@@ -177,40 +178,40 @@ model Device {
 }
 
 model ServiceOrder {
-  id                String       @id @default(uuid())
-  orderNumber       String       @unique
-  status            OrderStatus  @default(TRIAJE)
-  priority          Priority     @default(MEDIA)
+  id                String          @id @default(uuid())
+  orderNumber       String          @unique
+  status            OrderStatus     @default(TRIAJE)
+  priority          Priority        @default(MEDIA)
   reportedIssue     String
-  termsAccepted     Boolean      @default(false)
+  termsAccepted     Boolean         @default(false)
   customerSignature String?
   diagnosis         String?
   solution          String?
-  estimatedCost     Decimal      @default(0) @db.Decimal(10, 2)
-  finalCost         Decimal      @default(0) @db.Decimal(10, 2)
-  paidAmount        Decimal      @default(0) @db.Decimal(10, 2)
-  customerId      String
-  customer        Customer     @relation(fields: [customerId], references: [id])
-  deviceId        String
-  device          Device       @relation(fields: [deviceId], references: [id])
-  storeId         String
-  store           Store        @relation(fields: [storeId], references: [id])
-  createdById      String
-  createdBy        User         @relation("CreatedBy", fields: [createdById], references: [id])
-  assignedToId     String?
-  assignedTo       User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
-  checklist       ChecklistItem[]
-  photos          Photo[]
-  partsUsed       PartUsage[]
-  internalPhotos  Photo[]       @relation("InternalPhotos")
-  timeEntries     TimeEntry[]
-  qaResult        QAResult?
-  invoice         Invoice?
-  safeKitId       String?       @unique
-  safeKit         SafeKit?      @relation(fields: [safeKitId], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  completedAt     DateTime?
+  estimatedCost     Decimal         @default(0) @db.Decimal(10, 2)
+  finalCost         Decimal         @default(0) @db.Decimal(10, 2)
+  paidAmount        Decimal         @default(0) @db.Decimal(10, 2)
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  deviceId          String
+  device            Device          @relation(fields: [deviceId], references: [id])
+  storeId           String
+  store             Store           @relation(fields: [storeId], references: [id])
+  createdById       String
+  createdBy         User            @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedToId      String?
+  assignedTo        User?           @relation("AssignedTo", fields: [assignedToId], references: [id])
+  checklist         ChecklistItem[]
+  photos            Photo[]
+  partsUsed         PartUsage[]
+  internalPhotos    Photo[]         @relation("InternalPhotos")
+  timeEntries       TimeEntry[]
+  qaResult          QAResult?
+  invoice           Invoice?
+  safeKitId         String?         @unique
+  safeKit           SafeKit?        @relation(fields: [safeKitId], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  completedAt       DateTime?
   @@map("service_orders")
 }
 
@@ -226,48 +227,48 @@ model ChecklistItem {
 }
 
 model Photo {
-  id          String       @id @default(uuid())
-  url         String
-  type        String
-  description String?
-  orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id              String        @id @default(uuid())
+  url             String
+  type            String
+  description     String?
+  orderId         String
+  order           ServiceOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   internalOrderId String?
   internalOrder   ServiceOrder? @relation("InternalPhotos", fields: [internalOrderId], references: [id])
-  uploadedAt  DateTime     @default(now())
+  uploadedAt      DateTime      @default(now())
   @@map("photos")
 }
 
 model Part {
-  id                String       @id @default(uuid())
-  sku               String       @unique
+  id                String          @id @default(uuid())
+  sku               String          @unique
   name              String
   description       String?
   category          String
   compatibleModels  String[]
-  costPrice         Decimal      @db.Decimal(10, 2)
-  salePrice         Decimal      @db.Decimal(10, 2)
-  shippingCost      Decimal      @default(0) @db.Decimal(10, 2)
-  operationalCost   Decimal      @default(0) @db.Decimal(10, 2)
-  warrantyFund      Decimal      @default(0) @db.Decimal(10, 2)
-  minStock          Int          @default(3)
+  costPrice         Decimal         @db.Decimal(10, 2)
+  salePrice         Decimal         @db.Decimal(10, 2)
+  shippingCost      Decimal         @default(0) @db.Decimal(10, 2)
+  operationalCost   Decimal         @default(0) @db.Decimal(10, 2)
+  warrantyFund      Decimal         @default(0) @db.Decimal(10, 2)
+  minStock          Int             @default(3)
   supplier          String?
   stock             PartStock[]
   transfers         StockTransfer[]
   usages            PartUsage[]
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   @@map("parts")
 }
 
 model PartStock {
-  id        String   @id @default(uuid())
-  quantity  Int      @default(0)
-  reserved  Int      @default(0)
+  id        String @id @default(uuid())
+  quantity  Int    @default(0)
+  reserved  Int    @default(0)
   partId    String
-  part      Part     @relation(fields: [partId], references: [id])
+  part      Part   @relation(fields: [partId], references: [id])
   storeId   String
-  store     Store    @relation(fields: [storeId], references: [id])
+  store     Store  @relation(fields: [storeId], references: [id])
   @@unique([partId, storeId])
   @@map("part_stocks")
 }
@@ -291,23 +292,23 @@ model StockTransfer {
 }
 
 model PartUsage {
-  id          String       @id @default(uuid())
-  quantity    Int
-  costPrice   Decimal      @db.Decimal(10, 2)
-  salePrice   Decimal      @db.Decimal(10, 2)
-  partId      String
-  part        Part         @relation(fields: [partId], references: [id])
-  orderId     String
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id        String       @id @default(uuid())
+  quantity  Int
+  costPrice Decimal      @db.Decimal(10, 2)
+  salePrice Decimal      @db.Decimal(10, 2)
+  partId    String
+  part      Part         @relation(fields: [partId], references: [id])
+  orderId   String
+  order     ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   @@map("part_usages")
 }
 
 model TimeEntry {
-  id          String       @id @default(uuid())
-  startTime   DateTime
-  endTime     DateTime?
-  duration    Int?
-  description String
+  id           String       @id @default(uuid())
+  startTime    DateTime
+  endTime      DateTime?
+  duration     Int?
+  description  String
   technicianId String
   technician   User         @relation(fields: [technicianId], references: [id])
   orderId      String
@@ -316,37 +317,37 @@ model TimeEntry {
 }
 
 model QAResult {
-  id          String       @id @default(uuid())
-  passed      Boolean
-  testDate    DateTime     @default(now())
-  notes       String?
-  orderId     String       @unique
-  order       ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  testedBy    String
-  tests       QATest[]
+  id        String       @id @default(uuid())
+  passed    Boolean
+  testDate  DateTime     @default(now())
+  notes     String?
+  orderId   String       @unique
+  order     ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  testedBy  String
+  tests     QATest[]
   @@map("qa_results")
 }
 
 model QATest {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
-  passed      Boolean      @default(false)
+  passed      Boolean  @default(false)
   notes       String?
   qaResultId  String
-  qaResult    QAResult     @relation(fields: [qaResultId], references: [id], onDelete: Cascade)
+  qaResult    QAResult @relation(fields: [qaResultId], references: [id], onDelete: Cascade)
   @@map("qa_tests")
 }
 
 model SafeKit {
-  id              String          @id @default(uuid())
-  code            String          @unique
-  name            String
-  qrCode          String
-  status          String          @default("available")
-  storeId         String
-  store           Store           @relation(fields: [storeId], references: [id])
-  currentOrder    ServiceOrder?
-  createdAt       DateTime        @default(now())
+  id            String        @id @default(uuid())
+  code          String        @unique
+  name          String
+  qrCode        String
+  status        String        @default("available")
+  storeId       String
+  store         Store         @relation(fields: [storeId], references: [id])
+  currentOrder  ServiceOrder?
+  createdAt     DateTime      @default(now())
   @@map("safe_kits")
 }
 
@@ -365,53 +366,53 @@ model CourtesyDevice {
 }
 
 model DeviceLoan {
-  id                String         @id @default(uuid())
-  loanDate          DateTime       @default(now())
+  id                 String         @id @default(uuid())
+  loanDate           DateTime       @default(now())
   expectedReturnDate DateTime
-  actualReturnDate  DateTime?
-  condition         String
-  notes             String?
-  deviceId          String
-  device            CourtesyDevice @relation(fields: [deviceId], references: [id])
-  customerId        String
-  customer          Customer       @relation(fields: [customerId], references: [id])
-  orderId           String
+  actualReturnDate   DateTime?
+  condition          String
+  notes              String?
+  deviceId           String
+  device             CourtesyDevice @relation(fields: [deviceId], references: [id])
+  customerId         String
+  customer           Customer       @relation(fields: [customerId], references: [id])
+  orderId            String
   @@map("device_loans")
 }
 
 model Invoice {
-  id              String         @id @default(uuid())
-  invoiceNumber   String         @unique
-  subtotal        Decimal        @db.Decimal(10, 2)
-  igtfAmount      Decimal        @default(0) @db.Decimal(10, 2)
-  discount        Decimal        @default(0) @db.Decimal(10, 2)
-  total           Decimal        @db.Decimal(10, 2)
-  totalVES        Decimal        @db.Decimal(10, 2)
-  paidTotal       Decimal        @default(0) @db.Decimal(10, 2)
-  status          InvoiceStatus  @default(PENDING)
-  customerId      String
-  customer        Customer       @relation(fields: [customerId], references: [id])
-  storeId         String
-  store           Store          @relation(fields: [storeId], references: [id])
-  orderId         String?        @unique
-  order           ServiceOrder?  @relation(fields: [orderId], references: [id])
-  items           InvoiceItem[]
-  payments        Payment[]
-  createdBy       String
-  createdAt       DateTime       @default(now())
-  paidAt          DateTime?
+  id             String         @id @default(uuid())
+  invoiceNumber  String         @unique
+  subtotal       Decimal        @db.Decimal(10, 2)
+  igtfAmount     Decimal        @default(0) @db.Decimal(10, 2)
+  discount       Decimal        @default(0) @db.Decimal(10, 2)
+  total          Decimal        @db.Decimal(10, 2)
+  totalVES       Decimal        @db.Decimal(10, 2)
+  paidTotal      Decimal        @default(0) @db.Decimal(10, 2)
+  status         InvoiceStatus  @default(PENDING)
+  customerId     String
+  customer       Customer       @relation(fields: [customerId], references: [id])
+  storeId        String
+  store          Store          @relation(fields: [storeId], references: [id])
+  orderId        String?        @unique
+  order          ServiceOrder?  @relation(fields: [orderId], references: [id])
+  items          InvoiceItem[]
+  payments       Payment[]
+  createdBy      String
+  createdAt      DateTime       @default(now())
+  paidAt         DateTime?
   @@map("invoices")
 }
 
 model InvoiceItem {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   type        String
   description String
   quantity    Int
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2)
   invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   @@map("invoice_items")
 }
 
@@ -426,43 +427,43 @@ model Payment {
   email       String?
   timestamp   DateTime      @default(now())
   invoiceId   String
-  invoice     Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   @@map("payments")
 }
 
 model CashRegister {
-  id              String          @id @default(uuid())
-  openingUSD      Decimal         @db.Decimal(10, 2)
-  openingVES      Decimal         @db.Decimal(10, 2)
-  declaredUSD     Decimal?        @db.Decimal(10, 2)
-  declaredVES     Decimal?        @db.Decimal(10, 2)
-  systemUSD       Decimal         @db.Decimal(10, 2)
-  systemVES       Decimal         @db.Decimal(10, 2)
-  discrepancyUSD  Decimal?        @db.Decimal(10, 2)
-  discrepancyVES  Decimal?        @db.Decimal(10, 2)
+  id              String             @id @default(uuid())
+  openingUSD      Decimal            @db.Decimal(10, 2)
+  openingVES      Decimal            @db.Decimal(10, 2)
+  declaredUSD     Decimal?           @db.Decimal(10, 2)
+  declaredVES     Decimal?           @db.Decimal(10, 2)
+  systemUSD       Decimal            @db.Decimal(10, 2)
+  systemVES       Decimal            @db.Decimal(10, 2)
+  discrepancyUSD  Decimal?           @db.Decimal(10, 2)
+  discrepancyVES  Decimal?           @db.Decimal(10, 2)
   status          RegisterStatus
   storeId         String
-  store           Store           @relation(fields: [storeId], references: [id])
+  store           Store              @relation(fields: [storeId], references: [id])
   openedById      String
-  openedBy        User            @relation(fields: [openedById], references: [id])
+  openedBy        User               @relation(fields: [openedById], references: [id])
   closedById      String?
   expenses        PettyCashExpense[]
-  openedAt        DateTime        @default(now())
+  openedAt        DateTime           @default(now())
   closedAt        DateTime?
   @@map("cash_registers")
 }
 
 model PettyCashExpense {
-  id          String       @id @default(uuid())
-  description String
-  amount      Decimal      @db.Decimal(10, 2)
-  currency    String
-  category    String
+  id           String       @id @default(uuid())
+  description  String
+  amount       Decimal      @db.Decimal(10, 2)
+  currency     String
+  category     String
   receiptPhoto String?
-  registerId  String
-  register    CashRegister @relation(fields: [registerId], references: [id], onDelete: Cascade)
-  createdBy   String
-  createdAt   DateTime     @default(now())
+  registerId   String
+  register     CashRegister @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  createdBy    String
+  createdAt    DateTime     @default(now())
   @@map("petty_cash_expenses")
 }
 
