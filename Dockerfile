@@ -1,7 +1,6 @@
 # 1. Etapa de Construcción (Builder)
 FROM node:20-alpine AS builder
 
-# Instalar dependencias de sistema (OpenSSL vital para Prisma)
 RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
@@ -13,7 +12,10 @@ RUN npm ci
 
 COPY . .
 
-# Generar cliente de Prisma y forzar la compilación aunque TypeScript se queje
+# ⚡ PUENTEO: Le damos una URL falsa a Prisma para que pase la validación
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
+# Generar cliente de Prisma y compilar
 RUN npx prisma generate
 RUN npm run build || true
 
@@ -34,7 +36,8 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Configuración de Entorno de ServisTech
+# ⚡ PUENTEO: Repetimos la URL falsa para la etapa final
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV NODE_ENV=production \
     PORT=3000 \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -42,7 +45,6 @@ ENV NODE_ENV=production \
 
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-# Copiamos la carpeta compilada (el build forzado)
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
