@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,71 +7,206 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ---------------------------------------------------------
-// MODELOS DEL SISTEMA SERVISTECH
-// ---------------------------------------------------------
+// ==========================================
+// 🏥 NÚCLEO DEL SISTEMA (TIENDAS Y USUARIOS)
+// ==========================================
+
+model Store {
+  id            String         @id @default(uuid())
+  name          String
+  address       String
+  phone         String
+  email         String?
+  rif           String?        @unique
+  users         User[]
+  orders        ServiceOrder[]
+  invoices      Invoice[]
+  cashRegisters CashRegister[]
+  inventory     PartStock[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
 
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
   name      String
-  role      String   @default("TECHNICIAN") // ADMIN, TECHNICIAN, RECEPTIONIST
+  role      String   @default("TECHNICIAN") // ADMIN, SUPER_ADMIN, TECHNICIAN, RECEPTIONIST
   active    Boolean  @default(true)
+  lastLogin DateTime?
+  
+  storeId   String?
+  store     Store?   @relation(fields: [storeId], references: [id])
+  
+  orders    ServiceOrder[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  orders    Order[]
 }
+
+// ==========================================
+// 👥 CLIENTES Y REPARACIONES
+// ==========================================
 
 model Customer {
-  id        String   @id @default(uuid())
-  name      String
-  email     String?
-  phone     String
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+  id         String         @id @default(uuid())
+  name       String
+  documentId String?        @unique // Cédula o RIF
+  email      String?
+  phone      String
+  address    String?
+  orders     ServiceOrder[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }
 
-model Order {
-  id           String   @id @default(uuid())
-  orderNumber  Int      @unique @default(autoincrement())
-  device       String   // Ejemplo: iPhone 13 Pro
-  brand        String   // Ejemplo: Apple
+model ServiceOrder {
+  id           String    @id @default(uuid())
+  orderNumber  Int       @unique @default(autoincrement())
+  device       String    
+  brand        String
   model        String
   serialNumber String?
   problem      String
   observations String?
-  status       String   @default("PENDING") // PENDING, REPAIRING, READY, DELIVERED
-  cost         Float    @default(0)
-  price        Float    @default(0)
+  status       String    @default("PENDING") // PENDING, REPAIRING, READY, DELIVERED, CANCELLED
+  
+  cost         Float     @default(0) // Costo de repuestos
+  price        Float     @default(0) // Precio final al cliente
   
   customerId   String
-  customer     Customer @relation(fields: [customerId], references: [id])
+  customer     Customer  @relation(fields: [customerId], references: [id])
   
   technicianId String?
-  technician   User?    @relation(fields: [technicianId], references: [id])
+  technician   User?     @relation(fields: [technicianId], references: [id])
   
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  storeId      String
+  store        Store     @relation(fields: [storeId], references: [id])
+
+  parts        PartUsage[]
+  qaResults    QAResult[]
+  timeEntries  TimeEntry[]
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
-model Inventory {
-  id          String   @id @default(uuid())
-  partName    String
-  brand       String
+// ==========================================
+// 📦 INVENTARIO Y REPUESTOS
+// ==========================================
+
+model Part {
+  id               String      @id @default(uuid())
+  name             String
+  brand            String
   compatibleModels String[]
-  stock       Int      @default(0)
-  minStock    Int      @default(5)
-  cost        Float
-  price       Float
-  location    String?  // Ejemplo: Estante A-1
+  stocks           PartStock[]
+  usage            PartUsage[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model PartStock {
+  id        String @id @default(uuid())
+  stock     Int    @default(0)
+  minStock  Int    @default(5)
+  location  String? // Estante/Caja
+  
+  partId    String
+  part      Part   @relation(fields: [partId], references: [id])
+  
+  storeId   String
+  store     Store  @relation(fields: [storeId], references: [id])
+}
+
+model PartUsage {
+  id        String       @id @default(uuid())
+  quantity  Int          @default(1)
+  price     Float        // Precio al momento de usarlo
+  
+  partId    String
+  part      Part         @relation(fields: [partId], references: [id])
+  
+  orderId   String
+  order     ServiceOrder @relation(fields: [orderId], references: [id])
+}
+
+// ==========================================
+// 💰 FINANZAS Y CAJA
+// ==========================================
+
+model CashRegister {
+  id          String             @id @default(uuid())
+  name        String
+  status      String             @default("CLOSED") // OPEN, CLOSED
+  balance     Float              @default(0)
+  
+  storeId     String
+  store       Store              @relation(fields: [storeId], references: [id])
+  
+  expenses    PettyCashExpense[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model Invoice {
+  id          String   @id @default(uuid())
+  number      String   @unique
+  totalAmount Float
+  status      String   @default("PAID") // PAID, PENDING, CANCELLED
+  
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  
+  payments    Payment[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model BcvRate {
+model Payment {
+  id        String   @id @default(uuid())
+  amount    Float
+  method    String   // CASH, ZELLE, PAGO_MOVIL, TRANSFER
+  
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model PettyCashExpense {
+  id             String       @id @default(uuid())
+  description    String
+  amount         Float
+  
+  cashRegisterId String
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id])
+  createdAt      DateTime     @default(now())
+}
+
+// ==========================================
+// 📊 OTROS (CALIDAD, TIEMPOS, TASAS)
+// ==========================================
+
+model QAResult {
+  id        String       @id @default(uuid())
+  check     String
+  passed    Boolean
+  notes     String?
+  
+  orderId   String
+  order     ServiceOrder @relation(fields: [orderId], references: [id])
+}
+
+model TimeEntry {
+  id        String       @id @default(uuid())
+  startTime DateTime     @default(now())
+  endTime   DateTime?
+  
+  orderId   String
+  order     ServiceOrder @relation(fields: [orderId], references: [id])
+}
+
+model bcvRate {
   id        String   @id @default(uuid())
   rate      Float
   date      DateTime @default(now())
